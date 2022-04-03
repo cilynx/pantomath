@@ -2,10 +2,15 @@
 
 import wx
 
+from confmenu import ConfMenu
+
 
 class MainFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
+
+        self.config = wx.Config("Pantomath")
+        print(self.config.Read("/Scan/Duplex"))
 
         panel = wx.Panel(self)
 
@@ -25,11 +30,31 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.Exit, exitItem)
 
         scan_menu = wx.Menu()
-        scan_hardware_duplex = scan_menu.AppendRadioItem(wx.ID_ANY, "Hardware &Duplex", "Scan front and back of all pages in ADF using hardware duplexer")
-        scan_manual_duplex = scan_menu.AppendRadioItem(wx.ID_ANY, "&Manual Duplex", "Scan front of all pages, flip the stack manually, then scan the backs")
-        scan_fronts = scan_menu.AppendRadioItem(wx.ID_ANY, "Only &Fronts", "Scan backs of all pages using hardware duplexer")
-        scan_backs = scan_menu.AppendRadioItem(wx.ID_ANY, "Only &Backs", "Scan fronts of all pages")
+        scan_menu = ConfMenu(self, "/Scan")
+
+        scan_menu.AppendRadioSet(
+            {
+                'shortHelp': "Hardware &Duplex",
+                'longHelp': "Scan front and back of all pages in ADF using hardware duplexer",
+                'confValue': "Hardware"
+            }, {
+                'shortHelp': "&Manual Duplex",
+                'longHelp': "Scan front of all pages, flip the stack manually, then scan the backs",
+                'confValue': "Manual"
+            }, {
+                'shortHelp': "Only &Fronts",
+                'longHelp': "Scan front of all pages",
+                'confValue': "Fronts"
+            }, {
+                'shortHelp': "Only &Backs",
+                'longHelp': "Scan back of all pages using hardware duplexer",
+                'confValue': "Backs"
+            },
+            confKey="Duplex"
+        )
+
         fileMenu.AppendSeparator()
+
         scan_all_from_adf = scan_menu.Append(wx.ID_ANY, "Scan All from &ADF\tALT-A", "Scan all pages from ADF")
         self.Bind(wx.EVT_MENU, self.ScanAllFromADF, scan_all_from_adf)
         scan_one_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan &One Page from Flatbed\tALT-O", "Scan a single page from the flatbed")
@@ -57,13 +82,12 @@ class MainFrame(wx.Frame):
     def ScanMultipleFromFlatbed(self, event):
         wx.MessageBox("Scan multiple from Flatbed is not yet implemented")
 
-
     def Exit(self, event):
         self.Close(True)
 
     def About(self, event):
-        wx.MessageBox("Pantomath",
-                      "Pantomath knows lots of things.",
+        wx.MessageBox("Pantomath knows lots of things.",
+                      "Pantomath",
                       wx.OK | wx.ICON_INFORMATION)
 
 
