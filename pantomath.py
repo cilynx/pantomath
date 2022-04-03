@@ -30,9 +30,9 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.Exit, exitItem)
 
         scan_menu = wx.Menu()
-        scan_menu = ConfMenu(self, "/Scan")
 
-        scan_menu.AppendRadioSet(
+        duplex_menu = ConfMenu(self, "/Scan")
+        duplex_menu.AppendRadioSet(
             {
                 'shortHelp': "Hardware &Duplex",
                 'longHelp': "Scan front and back of all pages in ADF using hardware duplexer",
@@ -52,6 +52,7 @@ class MainFrame(wx.Frame):
             },
             confKey="Duplex"
         )
+        scan_menu.AppendMenu(wx.ID_ANY, 'Duplex', duplex_menu)
 
         fileMenu.AppendSeparator()
 
