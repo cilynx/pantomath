@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import wx
-import threading
 
 from objectify import ConfMenu, Scanner
 
@@ -16,7 +15,8 @@ class MainFrame(wx.Frame):
         self.SetStatusText("Pantomath v0.1")
         self.SetStatusText("Not connected to scanner", 1)
 
-        self.Dispatch(self.InitScanner, "Connecting to scanner...")
+        self.scanner = Scanner(self)
+        # self.Dispatch(self.InitScanner, "Connecting to scanner...")
 
         panel = wx.Panel(self)
 
@@ -70,14 +70,13 @@ class MainFrame(wx.Frame):
         scan_menu.AppendSeparator()
 
         self.scan_all_from_adf = scan_menu.Append(wx.ID_ANY, "Scan All from &ADF\tALT-A", "Scan all pages from ADF")
-        self.scan_all_from_adf.Enable(False)
-        self.Bind(wx.EVT_MENU, lambda event: self.Dispatch(self.ScanAllFromADF, "Scanning all pages from ADF."), self.scan_all_from_adf)
+        self.Bind(wx.EVT_MENU, self.scanner.scan_all_from_adf, self.scan_all_from_adf)
         self.scan_one_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan &One Page from Flatbed\tALT-O", "Scan a single page from the flatbed")
-        self.scan_one_from_flatbed.Enable(False)
-        self.Bind(wx.EVT_MENU, lambda event: self.Dispatch(self.ScanOneFromFlatbed, "Scanning one page from flatbed."), self.scan_one_from_flatbed)
+        self.Bind(wx.EVT_MENU, self.scanner.scan_one_from_flatbed, self.scan_one_from_flatbed)
         self.scan_multiple_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan Multiple &Pages from Flatbed\tALT-P", "Scan multiple pages from the flatbed glass, one at a time with a confirmation dialog in between each")
-        self.scan_multiple_from_flatbed.Enable(False)
-        self.Bind(wx.EVT_MENU, lambda event: self.Dispatch(self.ScanMultipleFromFlatbed, "Scanning multiple pages from flatbed."), self.scan_multiple_from_flatbed)
+        self.Bind(wx.EVT_MENU, self.scanner.scan_multiple_from_flatbed, self.scan_multiple_from_flatbed)
+
+        self.EnableScanUI(False)
 
         #######################################################################
         # Help Menu
@@ -97,6 +96,12 @@ class MainFrame(wx.Frame):
         menu_bar.Append(helpMenu, "&Help")
         self.SetMenuBar(menu_bar)
 
+    def EnableScanUI(self, state=True):
+        self.scan_all_from_adf.Enable(state)
+        self.scan_one_from_flatbed.Enable(state)
+        self.scan_multiple_from_flatbed.Enable(state)
+        # print(self.scanner.device.__dict__)
+
     def Exit(self, event):
         self.Close(True)
 
@@ -104,56 +109,6 @@ class MainFrame(wx.Frame):
         wx.MessageBox("Pantomath knows lots of things.",
                       "Pantomath",
                       wx.OK | wx.ICON_INFORMATION)
-
-    ###########################################################################
-    # Asynchronous Dispatcher: Kick off otherwise blocking actions as
-    #                          new threads to keep the UI responsive
-    ###########################################################################
-
-    def Dispatch(self, func, status_text='Running background job', daemon=True):
-        """
-        Dispatch async functions.
-
-        :returns a threading.Thread object
-        """
-
-        self.PushStatusText(status_text, 1)
-        thread = threading.Thread(target=func, daemon=daemon)
-        thread.start()
-        return thread
-
-    ###########################################################################
-    # Asynchronous Functions: These would block the UI if not
-    #                  dispatched in separate threads
-    ###########################################################################
-
-    def InitScanner(self):
-        self.scanner = Scanner()
-        self.PushStatusText(self.scanner.model + " Ready", 1)
-        self.scan_all_from_adf.Enable(True)
-        self.scan_one_from_flatbed.Enable(True)
-        self.scan_multiple_from_flatbed.Enable(True)
-        # print(self.scanner.device.__dict__)
-
-    def ScanAllFromADF(self):
-        wx.MessageBox("Scan all from ADF is not yet implemented")
-        self.PopStatusText(1)
-
-    def ScanOneFromFlatbed(self):
-        self.scanner.get_pil_image().show()
-        self.PopStatusText(1)
-
-    def ScanMultipleFromFlatbed(self):
-        i = 1
-        while True:
-            self.scanner.get_pil_image().show()
-            dialog = wx.MessageDialog(self, "", f"Scanned Page {i}", wx.YES_NO)
-            dialog.SetYesNoLabels("Scan Another Page", "All Done")
-            result = dialog.ShowModal()
-            if result != wx.ID_YES:
-                break
-            i += 1
-        self.PopStatusText(1)
 
 
 if __name__ == '__main__':
