@@ -10,13 +10,13 @@ class MainFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
+        self.config = wx.Config("pantomath")
+
         self.CreateStatusBar(2)
         self.SetStatusText("Pantomath v0.1")
         self.SetStatusText("Not connected to scanner", 1)
 
         self.Dispatch(self.InitScanner, "Connecting to scanner...")
-
-        self.config = wx.Config("pantomath")
 
         panel = wx.Panel(self)
 
