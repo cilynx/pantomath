@@ -14,7 +14,7 @@ class MainFrame(wx.Frame):
         self.SetStatusText("Pantomath v0.1")
         self.SetStatusText("Not connected to scanner", 1)
 
-        threading.Thread(target=self.InitScanner, daemon=True).start()
+        self.Dispatch(self.InitScanner, "Connecting to scanner...")
 
         self.config = wx.Config("pantomath")
 
@@ -28,8 +28,11 @@ class MainFrame(wx.Frame):
 
         self.CreateMenuBar()
 
+    def Dispatch(self, func, status_text='', daemon=True):
+        self.PushStatusText(status_text, 1)
+        threading.Thread(target=func, daemon=daemon).start()
+
     def InitScanner(self):
-        self.SetStatusText("Connecting to scanner...", 1)
         self.scanner = Scanner()
         self.SetStatusText(self.scanner.model, 1)
         self.scan_all_from_adf.Enable(True)
