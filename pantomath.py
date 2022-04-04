@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 
 import wx
+import threading
 
-from confmenu import ConfMenu
+from objectify import ConfMenu, Scanner
 
 
 class MainFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
+        self.CreateStatusBar(2)
+        self.SetStatusText("Pantomath v0.1")
+        self.SetStatusText("Not connected to scanner", 1)
+
+        threading.Thread(target=self.InitScanner, daemon=True).start()
+
         self.config = wx.Config("Pantomath")
-        print(self.config.Read("/Scan/Duplex"))
 
         panel = wx.Panel(self)
 
@@ -21,8 +27,15 @@ class MainFrame(wx.Frame):
         panel.SetSizer(sizer)
 
         self.CreateMenuBar()
-        self.CreateStatusBar()
-        self.SetStatusText("Welcome to wxPython")
+
+    def InitScanner(self):
+        self.SetStatusText("Connecting to scanner...", 1)
+        self.scanner = Scanner()
+        self.SetStatusText(self.scanner.model, 1)
+        self.scan_all_from_adf.Enable(True)
+        self.scan_one_from_flatbed.Enable(True)
+        self.scan_multiple_from_flatbed.Enable(True)
+        # print(self.scanner.device.__dict__)
 
     def CreateMenuBar(self):
 
@@ -65,12 +78,15 @@ class MainFrame(wx.Frame):
 
         scan_menu.AppendSeparator()
 
-        scan_all_from_adf = scan_menu.Append(wx.ID_ANY, "Scan All from &ADF\tALT-A", "Scan all pages from ADF")
-        self.Bind(wx.EVT_MENU, self.ScanAllFromADF, scan_all_from_adf)
-        scan_one_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan &One Page from Flatbed\tALT-O", "Scan a single page from the flatbed")
-        self.Bind(wx.EVT_MENU, self.ScanOneFromFlatbed, scan_one_from_flatbed)
-        scan_multiple_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan Multiple &Pages from Flatbed\tALT-P", "Scan multiple pages from the flatbed glass, one at a time with a confirmation dialog in between each")
-        self.Bind(wx.EVT_MENU, self.ScanMultipleFromFlatbed, scan_multiple_from_flatbed)
+        self.scan_all_from_adf = scan_menu.Append(wx.ID_ANY, "Scan All from &ADF\tALT-A", "Scan all pages from ADF")
+        self.scan_all_from_adf.Enable(False)
+        self.Bind(wx.EVT_MENU, self.ScanAllFromADF, self.scan_all_from_adf)
+        self.scan_one_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan &One Page from Flatbed\tALT-O", "Scan a single page from the flatbed")
+        self.scan_one_from_flatbed.Enable(False)
+        self.Bind(wx.EVT_MENU, self.ScanOneFromFlatbed, self.scan_one_from_flatbed)
+        self.scan_multiple_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan Multiple &Pages from Flatbed\tALT-P", "Scan multiple pages from the flatbed glass, one at a time with a confirmation dialog in between each")
+        self.scan_multiple_from_flatbed.Enable(False)
+        self.Bind(wx.EVT_MENU, self.ScanMultipleFromFlatbed, self.scan_multiple_from_flatbed)
 
         #######################################################################
         # Help Menu
@@ -94,10 +110,28 @@ class MainFrame(wx.Frame):
         wx.MessageBox("Scan all from ADF is not yet implemented")
 
     def ScanOneFromFlatbed(self, event):
-        wx.MessageBox("Scan one from Flatbed is not yet implemented")
+        self.PushStatusText("Scanning one page from flatbed", 1)
+        threading.Thread(target=self.DoScanOneFromFlatbed).start()
+
+    def DoScanOneFromFlatbed(self):
+        self.scanner.get_pil_image().show()
+        self.PopStatusText(1)
 
     def ScanMultipleFromFlatbed(self, event):
-        wx.MessageBox("Scan multiple from Flatbed is not yet implemented")
+        self.PushStatusText("Scanning multiple pages from flatbed", 1)
+        threading.Thread(target=self.DoScanMultipleFromFlatbed).start()
+
+    def DoScanMultipleFromFlatbed(self):
+        i = 1
+        while True:
+            self.scanner.get_pil_image().show()
+            dialog = wx.MessageDialog(self, "", f"Scanned Page {i}", wx.YES_NO)
+            dialog.SetYesNoLabels("Scan Another Page", "All Done")
+            result = dialog.ShowModal()
+            if result != wx.ID_YES:
+                break
+            i += 1
+        self.PopStatusText(1)
 
     def Exit(self, event):
         self.Close(True)
