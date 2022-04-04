@@ -25,9 +25,18 @@ class MainFrame(wx.Frame):
         self.SetStatusText("Welcome to wxPython")
 
     def CreateMenuBar(self):
+
+        #######################################################################
+        # File Menu
+        #######################################################################
+
         fileMenu = wx.Menu()
         exitItem = fileMenu.Append(wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.Exit, exitItem)
+
+        #######################################################################
+        # Scanning Menu
+        #######################################################################
 
         scan_menu = wx.Menu()
 
@@ -35,26 +44,26 @@ class MainFrame(wx.Frame):
         duplex_menu.AppendRadioSet(
             {
                 'shortHelp': "Hardware &Duplex",
-                'longHelp': "Scan front and back of all pages in ADF using hardware duplexer",
+                'longHelp':  "Scan front and back of all pages in ADF using hardware duplexer",
                 'confValue': "Hardware"
             }, {
                 'shortHelp': "&Manual Duplex",
-                'longHelp': "Scan front of all pages, flip the stack manually, then scan the backs",
+                'longHelp': " Scan front of all pages, flip the stack manually, then scan the backs",
                 'confValue': "Manual"
             }, {
                 'shortHelp': "Only &Fronts",
-                'longHelp': "Scan front of all pages",
+                'longHelp':  "Scan front of all pages",
                 'confValue': "Fronts"
             }, {
                 'shortHelp': "Only &Backs",
-                'longHelp': "Scan back of all pages using hardware duplexer",
+                'longHelp':  "Scan back of all pages using hardware duplexer",
                 'confValue': "Backs"
             },
             confKey="Duplex"
         )
-        scan_menu.AppendMenu(wx.ID_ANY, 'Duplex', duplex_menu)
+        scan_menu.AppendSubMenu(duplex_menu, 'Duplex')
 
-        fileMenu.AppendSeparator()
+        scan_menu.AppendSeparator()
 
         scan_all_from_adf = scan_menu.Append(wx.ID_ANY, "Scan All from &ADF\tALT-A", "Scan all pages from ADF")
         self.Bind(wx.EVT_MENU, self.ScanAllFromADF, scan_all_from_adf)
@@ -63,15 +72,22 @@ class MainFrame(wx.Frame):
         scan_multiple_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan Multiple &Pages from Flatbed\tALT-P", "Scan multiple pages from the flatbed glass, one at a time with a confirmation dialog in between each")
         self.Bind(wx.EVT_MENU, self.ScanMultipleFromFlatbed, scan_multiple_from_flatbed)
 
+        #######################################################################
+        # Help Menu
+        #######################################################################
+
         helpMenu = wx.Menu()
         aboutItem = helpMenu.Append(wx.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.About, aboutItem)
+
+        #######################################################################
+        # The Menu Bar Itself
+        #######################################################################
 
         menuBar = wx.MenuBar()
         menuBar.Append(fileMenu, "&File")
         menuBar.Append(scan_menu, "&Scan")
         menuBar.Append(helpMenu, "&Help")
-
         self.SetMenuBar(menuBar)
 
     def ScanAllFromADF(self, event):
