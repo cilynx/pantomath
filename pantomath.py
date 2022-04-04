@@ -100,11 +100,11 @@ class MainFrame(wx.Frame):
         # The Menu Bar Itself
         #######################################################################
 
-        menuBar = wx.MenuBar()
-        menuBar.Append(fileMenu, "&File")
-        menuBar.Append(scan_menu, "&Scan")
-        menuBar.Append(helpMenu, "&Help")
-        self.SetMenuBar(menuBar)
+        menu_bar = wx.MenuBar()
+        menu_bar.Append(fileMenu, "&File")
+        menu_bar.Append(scan_menu, "&Scan")
+        menu_bar.Append(helpMenu, "&Help")
+        self.SetMenuBar(menu_bar)
 
     def ScanAllFromADF(self, event):
         wx.MessageBox("Scan all from ADF is not yet implemented")
