@@ -16,7 +16,7 @@ class MainFrame(wx.Frame):
 
         threading.Thread(target=self.InitScanner, daemon=True).start()
 
-        self.config = wx.Config("Pantomath")
+        self.config = wx.Config("pantomath")
 
         panel = wx.Panel(self)
 
