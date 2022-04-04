@@ -11,6 +11,9 @@ class Scanner():
         self.uri, self.make, self.model, self.modes = sane.get_devices()[0]
         self.device = sane.open(self.uri)
 
+    def __del__(self):
+        self.device.close()
+
     def __getattr__(self, name):
         return self.device.__getattribute__(name)
 
