@@ -35,8 +35,8 @@ class Scanner():
 
     def _init_scanner(self):
         self.sane_version = sane.init()
-        self.uri, self.make, self.model, self.modes = sane.get_devices()[0]
-        self.device = sane.open(self.uri)
+        self.devname, self.vendor, self.model, self.type = sane.get_devices()[0]
+        self.device = sane.open(self.devname)
         self.PushStatusText(self.model + " Ready")
         self.frame.EnableScanUI()
 
