@@ -47,33 +47,45 @@ class MainFrame(wx.Frame):
         duplex_menu = ConfMenu(self, "/Scan")
         duplex_menu.AppendRadioSet(
             {
-                'shortHelp': "Hardware &Duplex",
-                'longHelp':  "Scan front and back of all pages in ADF using hardware duplexer",
-                'confValue': "Hardware"
+                'shortHelp': "75dpi",
+                'longHelp':  "75dpi",
+                'confValue': '75'
             }, {
-                'shortHelp': "&Manual Duplex",
-                'longHelp': " Scan front of all pages, flip the stack manually, then scan the backs",
-                'confValue': "Manual"
+                'shortHelp': "100dpi",
+                'longHelp':  "100dpi",
+                'confValue': '100'
             }, {
-                'shortHelp': "Only &Fronts",
-                'longHelp':  "Scan front of all pages",
-                'confValue': "Fronts"
+                'shortHelp': "200dpi",
+                'longHelp':  "200dpi",
+                'confValue': '200'
             }, {
-                'shortHelp': "Only &Backs",
-                'longHelp':  "Scan back of all pages using hardware duplexer",
-                'confValue': "Backs"
+                'shortHelp': "300dpi",
+                'longHelp':  "300dpi",
+                'confValue': '300'
+            }, {
+                'shortHelp': "600dpi",
+                'longHelp':  "600dpi",
+                'confValue': '600'
+            }, {
+                'shortHelp': "1200dpi",
+                'longHelp':  "1200dpi",
+                'confValue': '1200'
             },
-            confKey="Duplex"
+            confKey="Resolution"
         )
-        scan_menu.AppendSubMenu(duplex_menu, 'Duplex')
+        scan_menu.AppendSubMenu(duplex_menu, 'Configuration')
 
         scan_menu.AppendSeparator()
 
-        self.scan_all_from_adf = scan_menu.Append(wx.ID_ANY, "Scan All from &ADF\tALT-A", "Scan all pages from ADF")
-        self.Bind(wx.EVT_MENU, self.scanner.scan_all_from_adf, self.scan_all_from_adf)
-        self.scan_one_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan &One Page from Flatbed\tALT-O", "Scan a single page from the flatbed")
+        self.scan_adf = scan_menu.Append(wx.ID_ANY, "Fronts from &ADF\tALT-A", "Fronts from ADF")
+        self.Bind(wx.EVT_MENU, self.scanner.scan_adf, self.scan_adf)
+        self.scan_hardware_duplex = scan_menu.Append(wx.ID_ANY, "Hardware &Duplex from ADF\tALT-D", "Hardware duplex all pages from ADF")
+        self.Bind(wx.EVT_MENU, self.scanner.scan_hardware_duplex, self.scan_hardware_duplex)
+        self.scan_manual_duplex = scan_menu.Append(wx.ID_ANY, "&Manual Duplex from ADF\tALT-M", "Manual duplex all pages from ADF")
+        self.Bind(wx.EVT_MENU, self.scanner.scan_manual_duplex, self.scan_manual_duplex)
+        self.scan_one_from_flatbed = scan_menu.Append(wx.ID_ANY, "&One Page from Flatbed\tALT-O", "Single page from the flatbed")
         self.Bind(wx.EVT_MENU, self.scanner.scan_one_from_flatbed, self.scan_one_from_flatbed)
-        self.scan_multiple_from_flatbed = scan_menu.Append(wx.ID_ANY, "Scan Multiple &Pages from Flatbed\tALT-P", "Scan multiple pages from the flatbed glass, one at a time with a confirmation dialog in between each")
+        self.scan_multiple_from_flatbed = scan_menu.Append(wx.ID_ANY, "Multiple &Pages from Flatbed\tALT-P", "Multiple pages from the flatbed glass, one at a time with a confirmation dialog in between each")
         self.Bind(wx.EVT_MENU, self.scanner.scan_multiple_from_flatbed, self.scan_multiple_from_flatbed)
 
         self.EnableScanUI(False)
@@ -97,7 +109,9 @@ class MainFrame(wx.Frame):
         self.SetMenuBar(menu_bar)
 
     def EnableScanUI(self, state=True):
-        self.scan_all_from_adf.Enable(state)
+        self.scan_adf.Enable(state)
+        self.scan_manual_duplex.Enable(state)
+        self.scan_hardware_duplex.Enable(state)
         self.scan_one_from_flatbed.Enable(state)
         self.scan_multiple_from_flatbed.Enable(state)
         # print(self.scanner.device.__dict__)

@@ -41,20 +41,40 @@ class Scanner():
         self.PushStatusText(self.model + " Ready")
         self.frame.EnableScanUI()
 
-    def scan_all_from_adf(self, event=None):
-        self.PushStatusText("Scanning all pages from ADF.")
-        thread = threading.Thread(target=self._scan_all_from_adf)
+    def scan_hardware_duplex(self, event=None):
+        self.PushStatusText("Scanning pages from ADF hardware duplexer.")
+        thread = threading.Thread(target=self._scan_adf, args=('ADF Duplex',))
         thread.start()
         return thread
 
-    def _scan_all_from_adf(self):
-        self.device.source = 'ADF'
-        self.br_x = 0
-        self.br_y = 0
+    def scan_manual_duplex(self, event=None):
+        self.PushStatusText("Manually duplexing pages from ADF.")
+        thread = threading.Thread(target=self._scan_adf, args=('ADF', True))
+        thread.start()
+        return thread
+
+    def scan_adf(self, event=None):
+        self.PushStatusText("Scanning fronts from ADF.")
+        thread = threading.Thread(target=self._scan_adf)
+        thread.start()
+        return thread
+
+    def _scan_adf(self, source='ADF', manual_duplex=False):
+        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
+        self.device.source = source
+        self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
+        self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max
+        # print(self.device.__dict__)
         images = list(self.device.multi_scan())
+        if manual_duplex:
+            wx.MessageDialog(self.frame,
+                             '',
+                             'Load the stack face-down back into the ADF',
+                             wx.OK).ShowModal()
+            backs = list(self.device.multi_scan())
+            images = [j for i in zip(images, reversed(backs)) for j in i]
         if images:
             images[0].save('out.pdf', save_all=True, append_images=images[1:])
-            images[0].show()
         else:
             wx.MessageBox("Is the document loaded in the ADF?")
         self.PopStatusText()
@@ -78,13 +98,14 @@ class Scanner():
 
     def _scan_multiple_from_flatbed(self):
         self.device.source = 'Flatbed'
-        i = 1
+        images = []
         while True:
-            self.scan().show()
-            dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {i}", wx.YES_NO)
+            images.append(self.scan())
+            dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {len(images)}", wx.YES_NO)
             dialog.SetYesNoLabels("Scan Another Page", "All Done")
             result = dialog.ShowModal()
             if result != wx.ID_YES:
                 break
-            i += 1
+        if images:
+            images[0].save('out.pdf', save_all=True, append_images=images[1:])
         self.PopStatusText()
