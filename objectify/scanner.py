@@ -10,7 +10,7 @@ class Scanner():
     def __init__(self, frame):
         self.frame = frame
         self.PushStatusText("Initializing scanner...")
-        threading.Thread(target=self._init_scanner).start()
+        threading.Thread(target=self._init_scanner, daemon=True).start()
 
     def __del__(self):
         self.device.close()
