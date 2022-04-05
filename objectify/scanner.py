@@ -40,15 +40,6 @@ class Scanner():
         self.PushStatusText(self.model + " Ready")
         self.frame.EnableScanUI()
 
-    def _get_pil_image(self):
-        """
-        Start a scan and return a PIL.Image
-
-        :returns: A PIL.Image
-        """
-        self.start()
-        return self.snap()
-
     def scan_all_from_adf(self, event=None):
         self.PushStatusText("Scanning all pages from ADF.")
         thread = threading.Thread(target=self._scan_all_from_adf)
@@ -66,7 +57,7 @@ class Scanner():
         return thread
 
     def _scan_one_from_flatbed(self):
-        self._get_pil_image().show()
+        self.scan().show()
         self.PopStatusText()
 
     def scan_multiple_from_flatbed(self, event=None):
@@ -78,7 +69,7 @@ class Scanner():
     def _scan_multiple_from_flatbed(self):
         i = 1
         while True:
-            self._get_pil_image().show()
+            self.scan().show()
             dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {i}", wx.YES_NO)
             dialog.SetYesNoLabels("Scan Another Page", "All Done")
             result = dialog.ShowModal()
