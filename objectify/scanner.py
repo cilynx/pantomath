@@ -2,6 +2,7 @@ import wx
 import sane
 import threading
 
+
 class Scanner():
     """
     A simple Scanner object
@@ -47,7 +48,15 @@ class Scanner():
         return thread
 
     def _scan_all_from_adf(self):
-        wx.MessageBox("Scan all from ADF is not yet implemented")
+        self.device.source = 'ADF'
+        self.br_x = 0
+        self.br_y = 0
+        images = list(self.device.multi_scan())
+        if images:
+            images[0].save('out.pdf', save_all=True, append_images=images[1:])
+            images[0].show()
+        else:
+            wx.MessageBox("Is the document loaded in the ADF?")
         self.PopStatusText()
 
     def scan_one_from_flatbed(self, event=None):
@@ -57,6 +66,7 @@ class Scanner():
         return thread
 
     def _scan_one_from_flatbed(self):
+        self.device.source = 'Flatbed'
         self.scan().show()
         self.PopStatusText()
 
@@ -67,6 +77,7 @@ class Scanner():
         return thread
 
     def _scan_multiple_from_flatbed(self):
+        self.device.source = 'Flatbed'
         i = 1
         while True:
             self.scan().show()
