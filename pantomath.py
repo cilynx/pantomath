@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import wx
+import filetype
 
 from objectify import Scanner
 
@@ -37,6 +38,8 @@ class MainFrame(wx.Frame):
         fileMenu = wx.Menu()
         exitItem = fileMenu.Append(wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.Exit, exitItem)
+        importItem = fileMenu.Append(wx.ID_ANY, "&Import File\tALT-I")
+        self.Bind(wx.EVT_MENU, self.ImportFile, importItem)
 
         #######################################################################
         # Scanning Menu
@@ -86,6 +89,35 @@ class MainFrame(wx.Frame):
         self.scan_one_from_flatbed.Enable(state)
         self.scan_multiple_from_flatbed.Enable(state)
         # print(self.scanner.device.__dict__)
+
+    def ImportFile(self, event):
+        file = self.OpenFile()
+        if file:
+            kind = filetype.guess(file.name)
+            if not kind:
+                wx.MessageBox("Unknown filetype.  Maybe plaintext?")
+            elif kind.mime.endswith('/pdf'):
+                wx.MessageBox("ImportPDF()")
+            elif kind.mime.startswith('image/'):
+                wx.MessageBox("ImportImage()")
+            else:
+                wx.MessageBox(f'{kind.mime} import not supported')
+
+    def OpenFile(self):
+        with wx.FileDialog(self,
+                           "Import file",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
+                           ) as fileDialog:
+
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            filePath = fileDialog.GetPath()
+            try:
+                with open(filePath, 'r') as file:
+                    return file
+            except IOError:
+                wx.LogError(f'Cannot open file: {filePath}')
 
     def Exit(self, event):
         self.Close(True)
