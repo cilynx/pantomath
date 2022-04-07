@@ -2,7 +2,7 @@
 
 import wx
 
-from objectify import ConfMenu, Scanner
+from objectify import Scanner
 
 
 class MainFrame(wx.Frame):
@@ -44,36 +44,7 @@ class MainFrame(wx.Frame):
 
         scan_menu = wx.Menu()
 
-        duplex_menu = ConfMenu(self, "/Scan")
-        duplex_menu.AppendRadioSet(
-            {
-                'shortHelp': "75dpi",
-                'longHelp':  "75dpi",
-                'confValue': '75'
-            }, {
-                'shortHelp': "100dpi",
-                'longHelp':  "100dpi",
-                'confValue': '100'
-            }, {
-                'shortHelp': "200dpi",
-                'longHelp':  "200dpi",
-                'confValue': '200'
-            }, {
-                'shortHelp': "300dpi",
-                'longHelp':  "300dpi",
-                'confValue': '300'
-            }, {
-                'shortHelp': "600dpi",
-                'longHelp':  "600dpi",
-                'confValue': '600'
-            }, {
-                'shortHelp': "1200dpi",
-                'longHelp':  "1200dpi",
-                'confValue': '1200'
-            },
-            confKey="Resolution"
-        )
-        scan_menu.AppendSubMenu(duplex_menu, 'Configuration')
+        scan_menu.AppendSubMenu(self.scanner.ConfigMenu(), 'Configuration')
 
         scan_menu.AppendSeparator()
 

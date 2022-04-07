@@ -2,6 +2,7 @@ import wx
 import sane
 import threading
 
+from .confmenu import ConfMenu
 
 class Scanner():
     """
@@ -28,6 +29,42 @@ class Scanner():
 
     def PopStatusText(self):
         return self.frame.PopStatusText(1)
+
+    ###########################################################################
+    # Config Menu
+    ###########################################################################
+
+    def ConfigMenu(self):
+        menu = ConfMenu(self.frame, "/Scan")
+        menu.AppendRadioSet(
+            {
+                'shortHelp': "75dpi",
+                'longHelp':  "75dpi",
+                'confValue': '75'
+            }, {
+                'shortHelp': "100dpi",
+                'longHelp':  "100dpi",
+                'confValue': '100'
+            }, {
+                'shortHelp': "200dpi",
+                'longHelp':  "200dpi",
+                'confValue': '200'
+            }, {
+                'shortHelp': "300dpi",
+                'longHelp':  "300dpi",
+                'confValue': '300'
+            }, {
+                'shortHelp': "600dpi",
+                'longHelp':  "600dpi",
+                'confValue': '600'
+            }, {
+                'shortHelp': "1200dpi",
+                'longHelp':  "1200dpi",
+                'confValue': '1200'
+            },
+            confKey="Resolution"
+        )
+        return menu
 
     ###########################################################################
     # Blocking Functions: All _functions would block the UI if
