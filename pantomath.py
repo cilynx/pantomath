@@ -47,7 +47,7 @@ class MainFrame(wx.Frame):
 
         scan_menu = wx.Menu()
 
-        scan_menu.AppendSubMenu(self.scanner.ConfigMenu(), 'Configuration')
+        scan_menu.AppendSubMenu(self.scanner.ConfigMenu(), '&Resolution')
 
         scan_menu.AppendSeparator()
 

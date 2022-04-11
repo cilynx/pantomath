@@ -42,19 +42,19 @@ class Scanner():
                 'longHelp':  "75dpi",
                 'confValue': '75'
             }, {
-                'shortHelp': "100dpi",
+                'shortHelp': "100dpi\tALT-1",
                 'longHelp':  "100dpi",
                 'confValue': '100'
             }, {
-                'shortHelp': "200dpi",
+                'shortHelp': "200dpi\tALT-2",
                 'longHelp':  "200dpi",
                 'confValue': '200'
             }, {
-                'shortHelp': "300dpi",
+                'shortHelp': "300dpi\tALT-3",
                 'longHelp':  "300dpi",
                 'confValue': '300'
             }, {
-                'shortHelp': "600dpi",
+                'shortHelp': "600dpi\tALT-6",
                 'longHelp':  "600dpi",
                 'confValue': '600'
             }, {

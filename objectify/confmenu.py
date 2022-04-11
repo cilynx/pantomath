@@ -16,6 +16,7 @@ class ConfMenu(wx.Menu):
                 if event.GetId() == item['obj'].GetId():
                     print(f"Writing {self.prefix}/{kwargs['confKey']}: {item['confValue']}")
                     self.frame.config.Write(f"{self.prefix}/{kwargs['confKey']}", item['confValue'])
+                    self.frame.SetStatusText(f"{self.prefix.replace('/','')} {kwargs['confKey']} is now {item['confValue']}", 1)
 
         for item in args:
             item['obj'] = self.AppendRadioItem(wx.ID_ANY, item['shortHelp'], item['longHelp'])
