@@ -3,7 +3,7 @@
 import wx
 import filetype
 
-from objectify import Scanner
+from objectify import Scanner, Image
 
 
 class MainFrame(wx.Frame):
@@ -90,6 +90,21 @@ class MainFrame(wx.Frame):
         self.scan_multiple_from_flatbed.Enable(state)
         # print(self.scanner.device.__dict__)
 
+    def ImportImage(self, image):
+        self.PushStatusText("Processing image...", 1)
+        image = Image(image).deskew()
+        print(f"BBox: {image.bbox()}")
+        from PIL import ImageDraw, ImageFilter
+        draw = ImageDraw.Draw(image.pil_image)
+        draw.rectangle(image.bbox(), outline=(255, 0, 0))
+        image.show()
+        print(f"Size: {image.size}")
+        image = image.pil_image.crop(image.bbox())
+        image = image.filter(ImageFilter.MinFilter())
+        image.show()
+
+        self.PopStatusText(1)
+
     def ImportFile(self, event):
         file = self.OpenFile()
         if file:
@@ -99,7 +114,7 @@ class MainFrame(wx.Frame):
             elif kind.mime.endswith('/pdf'):
                 wx.MessageBox("ImportPDF()")
             elif kind.mime.startswith('image/'):
-                wx.MessageBox("ImportImage()")
+                self.ImportImage(file.name)
             else:
                 wx.MessageBox(f'{kind.mime} import not supported')
 

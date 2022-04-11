@@ -123,9 +123,12 @@ class Scanner():
         return thread
 
     def _scan_one_from_flatbed(self):
+        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.source = 'Flatbed'
-        self.scan().show()
+        self.device.mode = 'color'
+        image = self.scan()
         self.PopStatusText()
+        self.frame.ImportImage(image)
 
     def scan_multiple_from_flatbed(self, event=None):
         self.PushStatusText("Scanning multiple pages from flatbed.")
