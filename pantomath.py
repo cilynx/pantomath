@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 
 import wx
+import os
 import filetype
 
-from objectify import Scanner, Image
+from objectify import Scanner, Image, Config
+from datetime import datetime
 
 
 class MainFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        self.config = wx.Config("pantomath")
+        self.config = Config("pantomath")
+
+        self._libraryPath = self.config.Read("/Library/Path", '')
+
+        self.libraryPath()
 
         self.CreateStatusBar(2)
         self.SetStatusText("Pantomath v0.1")
@@ -40,6 +46,11 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.Exit, exitItem)
         importItem = fileMenu.Append(wx.ID_ANY, "&Import File\tALT-I")
         self.Bind(wx.EVT_MENU, self.ImportFile, importItem)
+
+        settingsMenu = wx.Menu()
+        libraryLocation = settingsMenu.Append(wx.ID_ANY, "&Library Location\tALT-L")
+        self.Bind(wx.EVT_MENU, self.ChooseLibraryLocation, libraryLocation)
+        fileMenu.AppendSubMenu(settingsMenu, '&Settings')
 
         #######################################################################
         # Scanning Menu
@@ -92,6 +103,15 @@ class MainFrame(wx.Frame):
 
     def ImportImage(self, image):
         self.PushStatusText("Processing image...", 1)
+
+        now = datetime.now()
+        path = os.path.join(self.libraryPath(), now.strftime('%Y'), now.strftime('%m'), now.strftime('%d'))
+        wx.LogDebug(f"ImportImage(): Creating {path} if it doesn't already exist.")
+        os.makedirs(path, exist_ok=True)
+        raw = os.path.join(path, now.strftime('%H%M%S') + "-raw.webp")
+        wx.LogDebug("Saving raw scan to " + raw)
+        Image(image).save(raw, lossless=True)
+
         image = Image(image).deskew()
         print(f"BBox: {image.bbox()}")
         from PIL import ImageDraw, ImageFilter
@@ -102,6 +122,15 @@ class MainFrame(wx.Frame):
         image = image.pil_image.crop(image.bbox())
         image = image.filter(ImageFilter.MinFilter())
         image.show()
+
+        webp = os.path.join(path, now.strftime('%H%M%S') + ".webp")
+        wx.LogDebug("Saving processed image to " + webp)
+        image.save(webp, lossless=True)
+
+        thumb = os.path.join(path, now.strftime('%H%M%S') + "-thumb.webp")
+        wx.LogDebug("Saving thumbnail to " + thumb)
+        image.thumbnail((100, 100))
+        image.save(thumb)
 
         self.PopStatusText(1)
 
@@ -133,6 +162,25 @@ class MainFrame(wx.Frame):
                     return file
             except IOError:
                 wx.LogError(f'Cannot open file: {filePath}')
+
+    def ChooseLibraryLocation(self, event=None):
+        with wx.DirDialog(self,                         # parent
+                          "Select Library Directory",   # message
+                          "",                           # defaultPath
+                          wx.DD_DEFAULT_STYLE           # style
+                          ) as dirDialog:
+
+            if dirDialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            self._libraryPath = dirDialog.GetPath()
+            self.config.Write("/Library/Path", self._libraryPath)
+
+    def libraryPath(self):
+        if self._libraryPath == '':
+            wx.MessageBox("Please choose where to store your library.\n\nThis is where all of your imported files will live.")
+            self.ChooseLibraryLocation()
+        return self._libraryPath
 
     def Exit(self, event):
         self.Close(True)
