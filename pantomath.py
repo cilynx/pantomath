@@ -2,6 +2,9 @@
 
 import wx
 import os
+import json
+import uuid
+import glob
 import filetype
 
 from objectify import Scanner, Image, Config
@@ -104,11 +107,13 @@ class MainFrame(wx.Frame):
     def ImportImage(self, image):
         self.PushStatusText("Processing image...", 1)
 
+        uid = uuid.uuid4().hex
+
         now = datetime.now()
         path = os.path.join(self.libraryPath(), now.strftime('%Y'), now.strftime('%m'), now.strftime('%d'))
         wx.LogDebug(f"ImportImage(): Creating {path} if it doesn't already exist.")
         os.makedirs(path, exist_ok=True)
-        raw = os.path.join(path, now.strftime('%H%M%S') + "-raw.webp")
+        raw = os.path.join(path, uid + "-raw.webp")
         wx.LogDebug("Saving raw scan to " + raw)
         Image(image).save(raw, lossless=True)
 
@@ -123,14 +128,29 @@ class MainFrame(wx.Frame):
         image = image.filter(ImageFilter.MinFilter())
         image.show()
 
-        webp = os.path.join(path, now.strftime('%H%M%S') + ".webp")
+        while glob.glob(uid + '.*'):
+            wx.LogDebug("You should buy a lottery ticket.")
+            uid = uuid.uuid4()
+
+        webp = os.path.join(path, uid + ".webp")
         wx.LogDebug("Saving processed image to " + webp)
         image.save(webp, lossless=True)
 
-        thumb = os.path.join(path, now.strftime('%H%M%S') + "-thumb.webp")
+        thumb = os.path.join(path, uid + "-thumb.webp")
         wx.LogDebug("Saving thumbnail to " + thumb)
         image.thumbnail((100, 100))
         image.save(thumb)
+
+        props = os.path.join(path, uid + ".json")
+        propDict = {
+            'scan': {
+                'timestamp': now,
+                'devname': self.scanner.devname,
+                'model': self.scanner.model
+            }
+        }
+        with open(props, 'w') as file:
+            json.dump(propDict, file, indent=3, default=str)
 
         self.PopStatusText(1)
 
