@@ -72,10 +72,12 @@ class Scanner():
     ###########################################################################
 
     def _init_scanner(self):
+        wx.LogDebug('Initializing scanner')
         self.sane_version = sane.init()
         self.devname, self.vendor, self.model, self.type = sane.get_devices()[0]
         self.device = sane.open(self.devname)
         self.PushStatusText(self.model + " Ready")
+        wx.LogDebug('Enabling Scan UI')
         self.frame.EnableScanUI()
 
     def scan_hardware_duplex(self, event=None):
