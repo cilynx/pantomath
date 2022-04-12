@@ -7,8 +7,11 @@ import uuid
 import glob
 import filetype
 
-from objectify import Scanner, Image, Config
 from datetime import datetime
+
+from objectify import Scanner, Image, Config
+
+from pages import Documents, Organizations
 
 
 class MainFrame(wx.Frame):
@@ -26,14 +29,17 @@ class MainFrame(wx.Frame):
         self.SetStatusText("Not connected to scanner", 1)
 
         self.scanner = Scanner(self)
-        # self.Dispatch(self.InitScanner, "Connecting to scanner...")
 
         panel = wx.Panel(self)
+        notebook = wx.Notebook(panel)
+        docsPage = Documents(notebook)
+        orgsPage = Organizations(notebook)
 
-        text = wx.StaticText(panel, label="Pantomath")
+        notebook.AddPage(docsPage, 'Documents')
+        notebook.AddPage(orgsPage, 'Organizations')
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(text, wx.SizerFlags().Border(wx.TOP | wx.LEFT, 25))
+        sizer = wx.BoxSizer()
+        sizer.Add(notebook, wx.EXPAND)
         panel.SetSizer(sizer)
 
         self.CreateMenuBar()
