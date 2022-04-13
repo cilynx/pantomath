@@ -15,3 +15,13 @@ class Config(wx.Config):
         result = super().Write(*args)
         super().Flush()
         return result
+
+    def ReadBool(self, *args):
+        wx.LogDebug(f"Config.ReadBool({args})")
+        return super().ReadBool(*args)
+
+    def WriteBool(self, *args):
+        wx.LogDebug(f"Config.WriteBool({args})")
+        result = super().WriteBool(*args)
+        super().Flush()
+        return result

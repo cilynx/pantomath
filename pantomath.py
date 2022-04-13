@@ -10,6 +10,7 @@ import filetype
 from datetime import datetime
 
 from objectify import Scanner, Image, Config
+from library import Library
 
 from pages import Documents, Organizations
 
@@ -19,10 +20,7 @@ class MainFrame(wx.Frame):
         super().__init__(*args, **kw)
 
         self.config = Config("pantomath")
-
-        self._libraryPath = self.config.Read("/Library/Path", '')
-
-        self.libraryPath()
+        self.library = Library(self.GetLibraryDir())
 
         self.CreateStatusBar(2)
         self.SetStatusText("Pantomath v0.1")
@@ -44,6 +42,28 @@ class MainFrame(wx.Frame):
 
         self.CreateMenuBar()
 
+    def GetLibraryDir(self):
+        dir = self.config.Read("/Library/Path", '')
+        if dir == '':
+            wx.MessageBox("Please choose where to store your library.\n\nThis is where all of your imported files will live.")
+            dir = self.ChooseLibraryDir()
+        return dir
+
+    def ChooseLibraryDir(self, event=None):
+        with wx.DirDialog(self,                         # parent
+                          "Select Library Directory",   # message
+                          "",                           # defaultPath
+                          wx.DD_DEFAULT_STYLE           # style
+                          ) as dirDialog:
+            if dirDialog.ShowModal() == wx.ID_CANCEL:
+                return
+        dir = dirDialog.GetPath()
+        self.config.Write("/Library/Path", dir)
+        return dir
+
+    def OnRIO(self, event):
+        self.config.WriteBool("/Import/RemoveSource", self.rio.IsChecked())
+
     def CreateMenuBar(self):
 
         #######################################################################
@@ -57,8 +77,12 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.ImportFile, importItem)
 
         settingsMenu = wx.Menu()
-        libraryLocation = settingsMenu.Append(wx.ID_ANY, "&Library Location\tALT-L")
-        self.Bind(wx.EVT_MENU, self.ChooseLibraryLocation, libraryLocation)
+        libraryLocation = settingsMenu.Append(wx.ID_ANY, "Update &Library Location\tALT-L")
+        self.Bind(wx.EVT_MENU, self.ChooseLibraryDir, libraryLocation)
+        self.rio = settingsMenu.Append(wx.ID_ANY, "&Remove Imported Originals\tALT-R", kind=wx.ITEM_CHECK)
+        self.Bind(wx.EVT_MENU, self.OnRIO, self.rio)
+        riostate = self.config.ReadBool("/Import/RemoveSource", False)
+        self.rio.Check(riostate)
         fileMenu.AppendSubMenu(settingsMenu, '&Settings')
 
         #######################################################################
@@ -160,53 +184,35 @@ class MainFrame(wx.Frame):
 
         self.PopStatusText(1)
 
-    def ImportFile(self, event):
-        file = self.OpenFile()
-        if file:
-            kind = filetype.guess(file.name)
-            if not kind:
-                wx.MessageBox("Unknown filetype.  Maybe plaintext?")
-            elif kind.mime.endswith('/pdf'):
-                wx.MessageBox("ImportPDF()")
-            elif kind.mime.startswith('image/'):
-                self.ImportImage(file.name)
-            else:
-                wx.MessageBox(f'{kind.mime} import not supported')
+    def ImportPDF(self, filepath):
+        wx.LogDebug(f'ImportPDF({filepath})')
+        doc = self.library.new_document(filepath)
+        if self.config.Read("/Import/RemoveSource", ''):
+            if doc.md5 == doc.src_md5:
+                wx.LogDebug(f'Removing {filepath}')
+                os.remove(filepath)
+        wx.LogDebug(f'Imported {doc.path}')
 
-    def OpenFile(self):
+    def ImportFile(self, event):
+        filepath = self.ChooseFile()
+        kind = filetype.guess(filepath)
+        if not kind:
+            wx.MessageBox("Unknown filetype.  Maybe plaintext?")
+        elif kind.mime.endswith('/pdf'):
+            self.ImportPDF(filepath)
+        elif kind.mime.startswith('image/'):
+            self.ImportImage(filepath)
+        else:
+            wx.MessageBox(f'{kind.mime} import not supported')
+
+    def ChooseFile(self):
         with wx.FileDialog(self,
                            "Import file",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST
                            ) as fileDialog:
-
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
-
-            filePath = fileDialog.GetPath()
-            try:
-                with open(filePath, 'r') as file:
-                    return file
-            except IOError:
-                wx.LogError(f'Cannot open file: {filePath}')
-
-    def ChooseLibraryLocation(self, event=None):
-        with wx.DirDialog(self,                         # parent
-                          "Select Library Directory",   # message
-                          "",                           # defaultPath
-                          wx.DD_DEFAULT_STYLE           # style
-                          ) as dirDialog:
-
-            if dirDialog.ShowModal() == wx.ID_CANCEL:
-                return
-
-            self._libraryPath = dirDialog.GetPath()
-            self.config.Write("/Library/Path", self._libraryPath)
-
-    def libraryPath(self):
-        if self._libraryPath == '':
-            wx.MessageBox("Please choose where to store your library.\n\nThis is where all of your imported files will live.")
-            self.ChooseLibraryLocation()
-        return self._libraryPath
+            return fileDialog.GetPath()
 
     def Exit(self, event):
         self.Close(True)
