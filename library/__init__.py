@@ -10,3 +10,6 @@ class Library():
 
     def new_document(self, src):
         return Document(self, src)
+
+    def documents(self):
+        return ['foo', 'bar', 'baz', 'neen']

@@ -37,7 +37,7 @@ class MainFrame(wx.Frame):
         notebook.AddPage(orgsPage, 'Organizations')
 
         sizer = wx.BoxSizer()
-        sizer.Add(notebook, wx.EXPAND)
+        sizer.Add(notebook, 1, wx.EXPAND)
         panel.SetSizer(sizer)
 
         self.CreateMenuBar()
