@@ -140,7 +140,7 @@ class MainFrame(wx.Frame):
         uid = uuid.uuid4().hex
 
         now = datetime.now()
-        path = os.path.join(self.libraryPath(), now.strftime('%Y'), now.strftime('%m'), now.strftime('%d'))
+        path = os.path.join(self.library.dir, now.strftime('%Y'), now.strftime('%m'), now.strftime('%d'))
         wx.LogDebug(f"ImportImage(): Creating {path} if it doesn't already exist.")
         os.makedirs(path, exist_ok=True)
         raw = os.path.join(path, uid + "-raw.webp")
