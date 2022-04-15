@@ -42,6 +42,43 @@ class MainFrame(wx.Frame):
 
         self.CreateMenuBar()
 
+    def CreateFileSystemWatcher(self):
+        self._fswatcher = wx.FileSystemWatcher()
+        self._fswatcher.Bind(wx.EVT_FSWATCHER, self.OnFSEvent)
+        self.inbox = os.path.join(self.library.dir, 'inbox/')
+        os.makedirs(self.inbox, exist_ok=True)
+        self._fswatcher.Add(self.inbox)
+
+    def OnFSEvent(self, event):
+        flags = {
+            wx.FSW_EVENT_CREATE: 'wx.FSW_EVENT_CREATE',
+            wx.FSW_EVENT_DELETE: 'wx.FSW_EVENT_DELETE',
+            wx.FSW_EVENT_RENAME: 'wx.FSW_EVENT_RENAME',
+            wx.FSW_EVENT_MODIFY: 'wx.FSW_EVENT_MODIFY',
+            wx.FSW_EVENT_ACCESS: 'wx.FSW_EVENT_ACCESS',
+            wx.FSW_EVENT_ATTRIB: 'wx.FSW_EVENT_ATTRIB',
+            wx.FSW_EVENT_UNMOUNT: 'wx.FSW_EVENT_UNMOUNT',
+            wx.FSW_EVENT_WARNING: 'wx.FSW_EVENT_WARNING',
+            wx.FSW_EVENT_ERROR: 'wx.FSW_EVENT_ERROR',
+            wx.FSW_EVENT_ALL: 'wx.FSW_EVENT_ALL',
+        }
+        wx.LogDebug(f'ChangeType: {flags[event.ChangeType]}')
+        wx.LogDebug(event.Path)
+        self._last_fs_event = datetime.now()
+        if event.ChangeType == wx.FSW_EVENT_CREATE:
+            self.ImportFromInbox(event.Path)
+
+    def InboxHasSettled(self):
+        return (datetime.now()-self._last_fs_event).total_seconds() > 1
+
+    def ImportFromInbox(self, filepath):
+        if self.InboxHasSettled():
+            wx.LogDebug(f'Importing {filepath}')
+            self.ImportFile(filepath)
+        else:
+            wx.LogDebug('Waiting for Inbox to settle')
+            wx.CallLater(1000, self.ImportFromInbox, filepath)
+
     def GetLibraryDir(self):
         dir = self.config.Read("/Library/Path", '')
         if dir == '':
@@ -193,8 +230,11 @@ class MainFrame(wx.Frame):
                 os.remove(filepath)
         wx.LogDebug(f'Imported {doc.path}')
 
-    def ImportFile(self, event):
-        filepath = self.ChooseFile()
+    def ImportFile(self, arg):
+        filepath = arg
+        if type(arg) is wx.Event:
+            filepath = self.ChooseFile()
+        wx.LogDebug(f'Importing {filepath}')
         kind = filetype.guess(filepath)
         if not kind:
             wx.MessageBox("Unknown filetype.  Maybe plaintext?")
@@ -223,8 +263,20 @@ class MainFrame(wx.Frame):
                       wx.OK | wx.ICON_INFORMATION)
 
 
+class Pantomath(wx.App):
+    def __init__(self):
+        super().__init__()
+        self._initialized = False
+        self.m_frame = MainFrame(None, title="Pantomath")
+
+    def OnEventLoopEnter(self, loop):
+        wx.LogDebug("Entering event loop.")
+        if not self._initialized:
+            self.m_frame.CreateFileSystemWatcher()
+            self._initialized = True
+
+
 if __name__ == '__main__':
-    app = wx.App()
-    frame = MainFrame(None, title="Pantomath")
-    frame.Show()
+    app = Pantomath()
+    app.m_frame.Show()
     app.MainLoop()
