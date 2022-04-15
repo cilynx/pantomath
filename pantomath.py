@@ -223,12 +223,16 @@ class MainFrame(wx.Frame):
 
     def ImportPDF(self, filepath):
         wx.LogDebug(f'ImportPDF({filepath})')
-        doc = self.library.new_document(filepath)
-        if self.config.Read("/Import/RemoveSource", ''):
-            if doc.md5 == doc.src_md5:
+        doc = self.library.import_pdf(filepath)
+        if doc is False:
+            dialog = wx.MessageDialog(self, f'Document is already in your library.  Delete {filepath}?', style=wx.YES_NO)
+            if dialog.ShowModal() == wx.ID_YES:
                 wx.LogDebug(f'Removing {filepath}')
                 os.remove(filepath)
-        wx.LogDebug(f'Imported {doc.path}')
+        elif self.config.Read("/Import/RemoveSource", ''):
+            wx.LogDebug(f'Imported {doc.json_path}')
+            wx.LogDebug(f'Removing {filepath}')
+            os.remove(filepath)
 
     def ImportFile(self, arg):
         filepath = arg

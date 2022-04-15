@@ -1,49 +1,26 @@
 import wx
 import os
-import uuid
-import glob
 import json
-import shutil
-import hashlib
-
-from datetime import datetime
 
 
 class Document():
 
-    def __init__(self, library, src):
-        wx.LogDebug('Initializing new Document')
-        self.library = library
-        self.date = datetime.now()
-        self.ext = os.path.splitext(src)[1]
-        self.src = src
-        wx.LogDebug(f'Document({src})')
-        self.dir = os.path.join(self.library.dir,
-                                self.date.strftime('%Y'),
-                                self.date.strftime('%m'),
-                                self.date.strftime('%d'))
-        wx.LogDebug(f"Creating {self.dir} if it doesn't already exist.")
-        os.makedirs(self.dir, exist_ok=True)
-        self.uuid = uuid.uuid4().hex
-        while glob.glob(os.path.join(self.dir, self.uuid)):
-            wx.LogDebug("You should buy a lottery ticket.")
-            self.uuid = uuid.uuid4()
-        wx.LogDebug(f'Document UUID is {self.uuid}')
-        self.path = os.path.join(self.dir, self.uuid + self.ext)
-        wx.LogDebug(f'Document path is {self.path}')
-        with open(src, 'rb') as file:
-            self.src_md5 = hashlib.md5(file.read()).hexdigest()
-        shutil.copy2(src, self.path)
-        with open(self.path, 'rb') as file:
-            self.md5 = hashlib.md5(file.read()).hexdigest()
-        assert self.src_md5 == self.md5
-        props = os.path.join(self.dir, self.uuid + '.json')
-        propDict = {
-            'import': {
-                'timestamp': datetime.now(),
-                'source': src,
-                'md5': self.md5
-            }
-        }
-        with open(props, 'w') as file:
-            json.dump(propDict, file, indent=3, default=str)
+    def __init__(self, json_path):
+        with open(json_path, 'r') as json_file:
+            self.json = json.load(json_file)
+        self.json_path = json_path
+        wx.LogDebug(json_path)
+        parts = list(os.path.split(json_path))
+        json_filename = parts.pop()
+        wx.LogDebug(f'json_filename: {json_filename}')
+        self.uuid = json_filename.split('.')[0]
+        wx.LogDebug(f'uuid: {self.uuid}')
+        path = parts.pop().split(os.sep)
+        self.day = path.pop()
+        wx.LogDebug(f'day: {self.day}')
+        self.month = path.pop()
+        wx.LogDebug(f'month: {self.month}')
+        self.year = path.pop()
+        wx.LogDebug(f'year: {self.year}')
+        self.lib_dir = os.sep.join(path)
+        wx.LogDebug(f'lib_dir: {self.lib_dir}')
