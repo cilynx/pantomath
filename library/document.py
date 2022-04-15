@@ -1,21 +1,25 @@
 import wx
 import os
 import json
+import glob
+import hashlib
 
 
 class Document():
 
     def __init__(self, json_path):
-        with open(json_path, 'r') as json_file:
-            self.json = json.load(json_file)
         self.json_path = json_path
+        with open(self.json_path, 'r') as json_file:
+            self.json = json.load(json_file)
         wx.LogDebug(json_path)
         parts = list(os.path.split(json_path))
         json_filename = parts.pop()
         wx.LogDebug(f'json_filename: {json_filename}')
         self.uuid = json_filename.split('.')[0]
         wx.LogDebug(f'uuid: {self.uuid}')
-        path = parts.pop().split(os.sep)
+        self.filedir = parts.pop()
+        wx.LogDebug(f'filedir: {self.filedir}')
+        path = self.filedir.split(os.sep)
         self.day = path.pop()
         wx.LogDebug(f'day: {self.day}')
         self.month = path.pop()
@@ -24,3 +28,33 @@ class Document():
         wx.LogDebug(f'year: {self.year}')
         self.lib_dir = os.sep.join(path)
         wx.LogDebug(f'lib_dir: {self.lib_dir}')
+
+    def write_json(self):
+        with open(self.json_path, 'w') as file:
+            json.dump(self.json, file, indent=3, sort_keys=True)
+
+    @property
+    def md5(self):
+        if 'md5' not in self.json:
+            if 'import' in self.json and 'md5' in self.json['import']:
+                self.json['md5'] = self.json['import']['md5']
+                del self.json['import']['md5']
+            else:
+                with open(self.processed_file_path, 'rb') as file:
+                    self.json['md5'] = hashlib.md5(file.read()).hexdigest()
+            self.write_json()
+        assert len(self.json['md5']) == 32
+        return self.json['md5']
+
+    @property
+    def processed_file_path(self):
+        if 'files' not in self.json:
+            path = os.path.join(self.filedir, self.uuid + '.*')
+            wx.LogDebug(path)
+            doc_files = glob.glob(path)
+            wx.LogDebug(str(doc_files))
+            doc_files.remove(self.json_path)
+            assert len(doc_files) == 1
+            processed = doc_files[0]
+            self.json['files'] = {'processed': processed}
+        return self.json['files']['processed']

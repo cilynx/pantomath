@@ -17,19 +17,29 @@ class Library():
         self.dir = dir
         self.documents = []
         for json_path in glob.glob(f'{dir}/*/*/*/*.json'):
-            self.documents.append(Document(json_path))
+            doc = Document(json_path)
+            wx.LogDebug(doc.uuid)
+            if doc.md5 in self.md5s:
+                # TODO: Alert user to duplicate and ask if we can remove
+                wx.LogDebug(f"Skipping {doc.json_path}")
+            else:
+                self.documents.append(doc)
+
+    @property
+    def md5s(self):
+        return [doc.md5 for doc in self.documents]
 
     def import_pdf(self, src):
         wx.LogDebug('Importing document to Library')
         date = datetime.now()
         with open(src, 'rb') as file:
             src_md5 = hashlib.md5(file.read()).hexdigest()
-            for doc in self.documents:
-                wx.LogDebug(f'Looking at {doc.json_path}')
-                if 'import' in doc.json:
-                    if doc.json['import']['md5'] == src_md5:
-                        wx.LogDebug('Not importing duplicate')
-                        return False
+        for doc in self.documents:
+            wx.LogDebug(f'Looking at {doc.json_path}')
+            if 'import' in doc.json:
+                if doc.json['import']['md5'] == src_md5:
+                    wx.LogDebug('Not importing duplicate')
+                    return False
         ext = os.path.splitext(src)[1]
         dir = os.path.join(self.dir,
                            date.strftime('%Y'),
