@@ -7,7 +7,61 @@ import hashlib
 
 class Document():
 
-    def __init__(self, json_path):
+    def __init__(self, id=None):
+        self.id = id
+
+        self.raw = None
+        self.json = None
+        self.processed = None
+
+        self.raw_path = None
+        self.json_path = None
+        self.processed_path = None
+
+    ###########################################################################
+    # Factory Methods
+    ###########################################################################
+
+    @classmethod
+    def from_json(cls, json_path):
+        """
+        JSON constructor
+
+        Takes in an absolute path to a JSON file
+        Returns a ready-to-use Document object
+        """
+        doc = cls()
+        doc.load_json(json_path)
+        return doc
+
+    ###########################################################################
+    # Object Manipulation
+    ###########################################################################
+
+    def merge(self, doc):
+        for key in doc.json:
+            if key in self.json and doc.json[key] != self.json[key]:
+                dialog = wx.MessageDialog(None,
+                                          key,
+                                          'Which value should we keep?',
+                                          wx.YES_NO)
+                dialog.SetYesNoLabels(str(self.json[key]), str(doc.json[key]))
+                result = dialog.ShowModal()
+                if result == wx.ID_YES:
+                    pass
+                elif result == wx.ID_NO:
+                    self.json[key] = doc.json[key]
+                else:
+                    raise ValueError()  # TODO: Handle this more gracefully
+            else:
+                self.json[key] = doc.json[key]
+        self.write_json()
+
+    ###########################################################################
+    # File I/O
+    ###########################################################################
+
+    def load_json(self, json_path):
         self.json_path = json_path
         with open(self.json_path, 'r') as json_file:
             self.json = json.load(json_file)
@@ -25,25 +79,18 @@ class Document():
         with open(self.json_path, 'w') as file:
             json.dump(self.json, file, indent=3, sort_keys=True)
 
-    def delete(self):
+    def write_files(self):
+        # self.write_raw()
+        self.write_json()
+        # self.write_processed()
+
+    def delete_files(self):
         for file in self.files:
             os.remove(file)
 
-    def merge(self, doc):
-        for key in doc.json:
-            if key in self.json and doc.json[key] != self.json[key]:
-                dialog = wx.MessageDialog(None, key, f'Which value should we keep?', wx.YES_NO)
-                dialog.SetYesNoLabels(str(self.json[key]), str(doc.json[key]))
-                result = dialog.ShowModal()
-                if result == wx.ID_YES:
-                    pass
-                elif result == wx.ID_NO:
-                    self.json[key] = doc.json[key]
-                else:
-                    raise ValueError()  # TODO: Handle this more gracefully
-            else:
-                self.json[key] = doc.json[key]
-        self.write_json()
+    ###########################################################################
+    # Properties
+    ###########################################################################
 
     @property
     def files(self):

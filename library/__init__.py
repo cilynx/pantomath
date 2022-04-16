@@ -17,10 +17,13 @@ class Library():
         self.dir = dir
         self.documents = []
         for json_path in glob.glob(f'{dir}/*/*/*/*.json'):
-            doc = Document(json_path)
+            doc = Document.from_json(json_path)
             wx.LogDebug(doc.uuid)
             if doc.md5 in self.md5s:
-                dialog = wx.MessageDialog(None, f'{doc.md5}', f'Merge duplicate entries?', wx.YES_NO)
+                dialog = wx.MessageDialog(None,
+                                          f'{doc.md5}',
+                                          'Merge duplicate entries?',
+                                          wx.YES_NO)
                 result = dialog.ShowModal()
                 if result == wx.ID_YES:
                     self.doc_from_md5(doc.md5).merge(doc)
@@ -76,5 +79,5 @@ class Library():
         }
         with open(json_filepath, 'w') as file:
             json.dump(json_dict, file, indent=3, default=str)
-        self.documents.append(Document(json_filepath))
+        self.documents.append(Document.from_json(json_filepath))
         return self.documents[-1]
