@@ -11,23 +11,15 @@ class Document():
         self.json_path = json_path
         with open(self.json_path, 'r') as json_file:
             self.json = json.load(json_file)
-        wx.LogDebug(json_path)
         parts = list(os.path.split(json_path))
         json_filename = parts.pop()
-        wx.LogDebug(f'json_filename: {json_filename}')
         self.uuid = json_filename.split('.')[0]
-        wx.LogDebug(f'uuid: {self.uuid}')
         self.filedir = parts.pop()
-        wx.LogDebug(f'filedir: {self.filedir}')
         path = self.filedir.split(os.sep)
         self.day = path.pop()
-        wx.LogDebug(f'day: {self.day}')
         self.month = path.pop()
-        wx.LogDebug(f'month: {self.month}')
         self.year = path.pop()
-        wx.LogDebug(f'year: {self.year}')
         self.lib_dir = os.sep.join(path)
-        wx.LogDebug(f'lib_dir: {self.lib_dir}')
 
     def write_json(self):
         with open(self.json_path, 'w') as file:
@@ -62,6 +54,10 @@ class Document():
         return os.path.join(self.filedir, self.uuid)
 
     @property
+    def ext(self):
+        return self.processed_file_path.split('.')[1]
+
+    @property
     def md5(self):
         if 'md5' not in self.json:
             if 'import' in self.json and 'md5' in self.json['import']:
@@ -85,4 +81,5 @@ class Document():
             assert len(doc_files) == 1
             processed = doc_files[0]
             self.json['files'] = {'processed': processed}
+            self.write_json()
         return self.json['files']['processed']
