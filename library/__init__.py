@@ -20,10 +20,19 @@ class Library():
             doc = Document(json_path)
             wx.LogDebug(doc.uuid)
             if doc.md5 in self.md5s:
-                # TODO: Alert user to duplicate and ask if we can remove
+                dialog = wx.MessageDialog(None, f'{doc.md5}', f'Merge duplicate entries?', wx.YES_NO)
+                result = dialog.ShowModal()
+                if result == wx.ID_YES:
+                    self.doc_from_md5(doc.md5).merge(doc)
+                    doc.delete()
                 wx.LogDebug(f"Skipping {doc.json_path}")
             else:
                 self.documents.append(doc)
+
+    def doc_from_md5(self, md5):
+        docs = [doc for doc in self.documents if doc.md5 == md5]
+        assert len(docs) == 1
+        return docs[0]
 
     @property
     def md5s(self):
@@ -36,10 +45,9 @@ class Library():
             src_md5 = hashlib.md5(file.read()).hexdigest()
         for doc in self.documents:
             wx.LogDebug(f'Looking at {doc.json_path}')
-            if 'import' in doc.json:
-                if doc.json['import']['md5'] == src_md5:
-                    wx.LogDebug('Not importing duplicate')
-                    return False
+            if doc.md5 == src_md5:
+                wx.LogDebug('Not importing duplicate')
+                return False
         ext = os.path.splitext(src)[1]
         dir = os.path.join(self.dir,
                            date.strftime('%Y'),
@@ -62,9 +70,9 @@ class Library():
         json_dict = {
             'import': {
                 'timestamp': datetime.now(),
-                'source': src,
-                'md5': dst_md5
-            }
+                'source': src
+            },
+            'md5': dst_md5
         }
         with open(json_filepath, 'w') as file:
             json.dump(json_dict, file, indent=3, default=str)

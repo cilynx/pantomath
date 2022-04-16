@@ -33,6 +33,34 @@ class Document():
         with open(self.json_path, 'w') as file:
             json.dump(self.json, file, indent=3, sort_keys=True)
 
+    def delete(self):
+        for file in self.files:
+            os.remove(file)
+
+    def merge(self, doc):
+        for key in doc.json:
+            if key in self.json and doc.json[key] != self.json[key]:
+                dialog = wx.MessageDialog(None, key, f'Which value should we keep?', wx.YES_NO)
+                dialog.SetYesNoLabels(str(self.json[key]), str(doc.json[key]))
+                result = dialog.ShowModal()
+                if result == wx.ID_YES:
+                    pass
+                elif result == wx.ID_NO:
+                    self.json[key] = doc.json[key]
+                else:
+                    raise ValueError()  # TODO: Handle this more gracefully
+            else:
+                self.json[key] = doc.json[key]
+        self.write_json()
+
+    @property
+    def files(self):
+        return glob.glob(self.root + '*')
+
+    @property
+    def root(self):
+        return os.path.join(self.filedir, self.uuid)
+
     @property
     def md5(self):
         if 'md5' not in self.json:

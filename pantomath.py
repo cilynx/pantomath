@@ -69,7 +69,7 @@ class MainFrame(wx.Frame):
             self.ImportFromInbox(event.Path)
 
     def InboxHasSettled(self):
-        return (datetime.now()-self._last_fs_event).total_seconds() > 1
+        return (datetime.now()-self._last_fs_event).total_seconds() > 2
 
     def ImportFromInbox(self, filepath):
         if self.InboxHasSettled():
