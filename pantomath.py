@@ -9,8 +9,7 @@ import filetype
 
 from datetime import datetime
 
-from objectify import Scanner, Image, Config
-from library import Library
+from src import Scanner, Image, Config, Library
 
 from pages import Documents, Organizations
 

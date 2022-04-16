@@ -130,7 +130,7 @@ class Scanner():
         self.device.mode = 'color'
         image = self.scan()
         self.PopStatusText()
-        self.frame.ImportImage(image)
+        self.frame.library.import_image(image)
 
     def scan_multiple_from_flatbed(self, event=None):
         self.PushStatusText("Scanning multiple pages from flatbed.")

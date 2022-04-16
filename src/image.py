@@ -1,7 +1,7 @@
 import PIL.Image
 import types
 
-from PIL import ImageOps, ImageFilter, ImageDraw
+from PIL import ImageOps, ImageFilter
 from itertools import chain, product
 from functools import partial
 
@@ -28,7 +28,8 @@ class Image():
             return partial(self._ImageOps, name)
         # Wrap PIL.Image methods
         elif hasattr(self.pil_image, name):
-            if isinstance(self.pil_image.__getattribute__(name), types.MethodType):
+            if isinstance(self.pil_image.__getattribute__(name),
+                          types.MethodType):
                 return partial(self._Image, name)
             else:
                 return self.pil_image.__getattribute__(name)

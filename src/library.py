@@ -5,6 +5,7 @@ import uuid
 import json
 import shutil
 import hashlib
+import pytesseract
 
 from datetime import datetime
 
@@ -40,6 +41,33 @@ class Library():
     @property
     def md5s(self):
         return [doc.md5 for doc in self.documents]
+
+    @property
+    def uuids(self):
+        return [doc.uuid for doc in self.documents]
+
+    def import_image(self, pil_image):
+        wx.LogDebug('Importing PIL Image')
+        id = uuid.uuid4()
+        while id in self.uuids:
+            wx.LogDebug("You should buy a lottery ticket.")
+            id = uuid.uuid4()
+        # Create Document object
+        doc = Document(id)
+        # Save the original to Document.raw
+        doc.raw = pil_image
+        # Process the image to make it OCRable
+
+        # OCR the image and store in Document.json
+        doc.json = {
+            'text': pytesseract.image_to_data(pil_image,
+                                              pytesseract.Output.DICT)
+        }
+        # Figure out appropriate date (today or from text)
+        # and store in Document.json
+        # Process the raw image and store in Document.processed
+        # Write Document files
+        doc.write_files()
 
     def import_pdf(self, src):
         wx.LogDebug('Importing document to Library')
