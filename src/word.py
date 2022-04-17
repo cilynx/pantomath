@@ -71,7 +71,7 @@ class Word(Placeable):
         if re.search(r'\d{2,4}', self.text):
             # 1 or 2-digit day followed by comma?
             pw = self.prev
-            if pw and re.search(r'\d{1,2}\,', pw.text) and 0 < int(pw) < 32:
+            if pw and re.search(r'\d{1,2}\,', pw.text) and 0 < int(pw.text) < 32:
                 # Month?
                 ppw = pw.prev
                 if ppw and re.search(months, ppw.text, re.IGNORECASE):
