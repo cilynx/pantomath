@@ -235,7 +235,7 @@ class MainFrame(wx.Frame):
 
     def ImportFile(self, arg):
         filepath = arg
-        if type(arg) is wx.Event:
+        if type(arg) == wx.CommandEvent:
             filepath = self.ChooseFile()
         wx.LogDebug(f'Importing {filepath}')
         kind = filetype.guess(filepath)

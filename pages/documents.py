@@ -15,7 +15,7 @@ class Documents(wx.Panel):
         pages = [(wx.Panel(self, wx.ID_ANY), "Panel One"),
                  (wx.Panel(self, wx.ID_ANY), "Panel Two"),
                  (wx.Panel(self, wx.ID_ANY), "Panel Three")]
-        pages = [(wx.Panel(self, wx.ID_ANY), doc.uuid) for doc in self.library.documents]
+        pages = [(wx.Panel(self, wx.ID_ANY), doc.id) for doc in self.library.documents]
         for page, label in pages:
             wx.LogDebug('Adding Document to UX')
             self.notebook.AddPage(page, label)

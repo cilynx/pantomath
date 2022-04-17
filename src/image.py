@@ -166,6 +166,9 @@ class Image():
         image._bbox = self.bbox()
         return image
 
+    def autocrop(self):
+        return self.pil_image.crop(self.bbox())
+
 
 class Region():
     def __init__(self, pixels):
