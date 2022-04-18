@@ -2,8 +2,6 @@ import wx
 import os
 import PIL
 import json
-import glob
-import hashlib
 import pytesseract
 
 from pytesseract import Output
@@ -24,7 +22,8 @@ class Document():
 
         self._processed = None
         self._json_path = None
-        self._json = { 'imported': Date.today() }
+        self._thumbnail = None
+        self._json = {'imported': Date.today()}
         self._date = None
         self._dates = []
         self._pages = []
@@ -73,7 +72,7 @@ class Document():
     ###########################################################################
 
     def write_original(self):
-        self.original.save(self.original_path)
+        self.original.save(self.original_path, lossless=True, save_all=True)
 
     def load_json(self, json_path):
         self.json_path = json_path
@@ -97,12 +96,17 @@ class Document():
         wx.LogDebug('write_processed()')
         self.processed.save(self.processed_path)
 
+    def write_thumb(self):
+        wx.LogDebug('write_thumb()')
+        self.thumb.save(self.thumb_path)
+
     def write_files(self, lib_dir):
         self.lib_dir = lib_dir
         os.makedirs(self.folder_path)
         self.write_json()
         self.write_original()
         self.write_processed()
+        self.write_thumb()
 
     def delete_files(self):
         for file in self.files:
@@ -131,6 +135,13 @@ class Document():
     ###########################################################################
     # Properties
     ###########################################################################
+
+    @property
+    def thumb(self):
+        wx.LogDebug('thumb()')
+        if not self._thumbnail:
+            self._thumbnail = Image(self.processed).thumbnail()
+        return self._thumbnail
 
     @property
     def processed(self):
@@ -242,15 +253,15 @@ class Document():
 
     @property
     def year(self):
-        return self.date.strftime('%Y')
+        return self.date.year
 
     @property
     def month(self):
-        return self.date.strftime('%m')
+        return self.date.month
 
     @property
     def day(self):
-        return self.date.strftime('%d')
+        return self.date.day
 
     # @property
     # def md5(self):
@@ -292,9 +303,13 @@ class Document():
 
     @property
     def original_path(self):
-        if type(self.original) is PIL.Image.Image:
+        if isinstance(self.original, PIL.Image.Image):
             return os.path.join(self.folder_path, 'original.webp')
         raise Exception("Non-Image originals are not yet supported")
+
+    @property
+    def thumb_path(self):
+        return os.path.join(self.folder_path, 'thumbnail.webp')
 
     @property
     def processed_path(self):

@@ -26,15 +26,15 @@ class Date(BagOfWords):
 
     @property
     def year(self):
-        return self.dt.year
+        return self.dt.strftime('%Y')
 
     @property
     def month(self):
-        return self.dt.month
+        return self.dt.strftime('%m')
 
     @property
     def day(self):
-        return self.dt.day
+        return self.dt.strftime('%d')
 
 
 class DateRange(BagOfWords):

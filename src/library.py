@@ -1,10 +1,12 @@
 import wx
 import os
+import PIL
 import glob
 import uuid
 import json
 import shutil
 import hashlib
+import filetype
 
 from datetime import datetime
 
@@ -52,8 +54,19 @@ class Library():
     def ids(self):
         return [doc.id for doc in self.documents]
 
+    def import_file(self, filepath):
+        kind = filetype.guess(filepath)
+        if not kind:
+            wx.MessageBox("Unknown filetype.  Maybe plaintext?")
+        elif kind.mime.endswith('/pdf'):
+            self.import_pdf(filepath)
+        elif kind.mime.startswith('image/'):
+            self.import_image(PIL.Image.open(filepath))
+        else:
+            wx.MessageBox(f'{kind.mime} import not supported')
+
     def import_image(self, pil_image):
-        wx.LogDebug('Importing PIL Image')
+        wx.LogDebug('Importing Image')
         doc = Document(self.new_id())
         doc.original = pil_image
         doc.write_files(self.dir)

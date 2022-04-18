@@ -5,7 +5,6 @@ import os
 import json
 import uuid
 import glob
-import filetype
 
 from datetime import datetime
 
@@ -73,7 +72,10 @@ class MainFrame(wx.Frame):
     def ImportFromInbox(self, filepath):
         if self.InboxHasSettled():
             wx.LogDebug(f'Importing {filepath}')
-            self.ImportFile(filepath)
+            self.library.import_file(filepath)
+            if self.config.Read("/Import/RemoveSource", ''):
+                wx.LogDebug(f'Removing {filepath}')
+                os.remove(filepath)
         else:
             wx.LogDebug('Waiting for Inbox to settle')
             wx.CallLater(1000, self.ImportFromInbox, filepath)
@@ -110,7 +112,7 @@ class MainFrame(wx.Frame):
         exitItem = fileMenu.Append(wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.Exit, exitItem)
         importItem = fileMenu.Append(wx.ID_ANY, "&Import File\tALT-I")
-        self.Bind(wx.EVT_MENU, self.ImportFile, importItem)
+        self.Bind(wx.EVT_MENU, self.OnImportFile, importItem)
 
         settingsMenu = wx.Menu()
         libraryLocation = settingsMenu.Append(wx.ID_ANY, "Update &Library Location\tALT-L")
@@ -170,55 +172,60 @@ class MainFrame(wx.Frame):
         self.scan_multiple_from_flatbed.Enable(state)
         # print(self.scanner.device.__dict__)
 
-    def ImportImage(self, image):
-        self.PushStatusText("Processing image...", 1)
+    def OnImportFile(self, event):
+        filepath = self.ChooseFile()
+        if filepath:
+            self.library.import_file(filepath)
 
-        uid = uuid.uuid4().hex
-
-        now = datetime.now()
-        path = os.path.join(self.library.dir, now.strftime('%Y'), now.strftime('%m'), now.strftime('%d'))
-        wx.LogDebug(f"ImportImage(): Creating {path} if it doesn't already exist.")
-        os.makedirs(path, exist_ok=True)
-        raw = os.path.join(path, uid + "-raw.webp")
-        wx.LogDebug("Saving raw scan to " + raw)
-        Image(image).save(raw, lossless=True)
-
-        image = Image(image).deskew()
-        print(f"BBox: {image.bbox()}")
-        from PIL import ImageDraw, ImageFilter
-        draw = ImageDraw.Draw(image.pil_image)
-        draw.rectangle(image.bbox(), outline=(255, 0, 0))
-        image.show()
-        print(f"Size: {image.size}")
-        image = image.pil_image.crop(image.bbox())
-        image = image.filter(ImageFilter.MinFilter())
-        image.show()
-
-        while glob.glob(uid + '.*'):
-            wx.LogDebug("You should buy a lottery ticket.")
-            uid = uuid.uuid4()
-
-        webp = os.path.join(path, uid + ".webp")
-        wx.LogDebug("Saving processed image to " + webp)
-        image.save(webp, lossless=True)
-
-        thumb = os.path.join(path, uid + "-thumb.webp")
-        wx.LogDebug("Saving thumbnail to " + thumb)
-        image.thumbnail((100, 100))
-        image.save(thumb)
-
-        props = os.path.join(path, uid + ".json")
-        propDict = {
-            'scan': {
-                'timestamp': now,
-                'devname': self.scanner.devname,
-                'model': self.scanner.model
-            }
-        }
-        with open(props, 'w') as file:
-            json.dump(propDict, file, indent=3, default=str)
-
-        self.PopStatusText(1)
+    # def ImportImage(self, image):
+    #     self.PushStatusText("Processing image...", 1)
+    #
+    #     uid = uuid.uuid4().hex
+    #
+    #     now = datetime.now()
+    #     path = os.path.join(self.library.dir, now.strftime('%Y'), now.strftime('%m'), now.strftime('%d'))
+    #     wx.LogDebug(f"ImportImage(): Creating {path} if it doesn't already exist.")
+    #     os.makedirs(path, exist_ok=True)
+    #     raw = os.path.join(path, uid + "-raw.webp")
+    #     wx.LogDebug("Saving raw scan to " + raw)
+    #     Image(image).save(raw, lossless=True)
+    #
+    #     image = Image(image).deskew()
+    #     print(f"BBox: {image.bbox()}")
+    #     from PIL import ImageDraw, ImageFilter
+    #     draw = ImageDraw.Draw(image.pil_image)
+    #     draw.rectangle(image.bbox(), outline=(255, 0, 0))
+    #     image.show()
+    #     print(f"Size: {image.size}")
+    #     image = image.pil_image.crop(image.bbox())
+    #     image = image.filter(ImageFilter.MinFilter())
+    #     image.show()
+    #
+    #     while glob.glob(uid + '.*'):
+    #         wx.LogDebug("You should buy a lottery ticket.")
+    #         uid = uuid.uuid4()
+    #
+    #     webp = os.path.join(path, uid + ".webp")
+    #     wx.LogDebug("Saving processed image to " + webp)
+    #     image.save(webp, lossless=True)
+    #
+    #     thumb = os.path.join(path, uid + "-thumb.webp")
+    #     wx.LogDebug("Saving thumbnail to " + thumb)
+    #     image.thumbnail((100, 100))
+    #     image.save(thumb)
+    #
+    #     props = os.path.join(path, uid + ".json")
+    #     propDict = {
+    #         'scan': {
+    #             'timestamp': now,
+    #             'devname': self.scanner.devname,
+    #             'model': self.scanner.model
+    #         }
+    #     }
+    #     with open(props, 'w') as file:
+    #         json.dump(propDict, file, indent=3, default=str)
+    #
+    #     self.PopStatusText(1)
 
     def ImportPDF(self, filepath):
         wx.LogDebug(f'ImportPDF({filepath})')
@@ -232,21 +239,6 @@ class MainFrame(wx.Frame):
             wx.LogDebug(f'Imported {doc.json_path}')
             wx.LogDebug(f'Removing {filepath}')
             os.remove(filepath)
-
-    def ImportFile(self, arg):
-        filepath = arg
-        if type(arg) == wx.CommandEvent:
-            filepath = self.ChooseFile()
-        wx.LogDebug(f'Importing {filepath}')
-        kind = filetype.guess(filepath)
-        if not kind:
-            wx.MessageBox("Unknown filetype.  Maybe plaintext?")
-        elif kind.mime.endswith('/pdf'):
-            self.ImportPDF(filepath)
-        elif kind.mime.startswith('image/'):
-            self.ImportImage(filepath)
-        else:
-            wx.MessageBox(f'{kind.mime} import not supported')
 
     def ChooseFile(self):
         with wx.FileDialog(self,

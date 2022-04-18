@@ -13,10 +13,17 @@ class Image():
         self._skew = None
         self._bbox = None
 
-        if type(arg) is str:
+        if isinstance(arg, str):
             self.pil_image = PIL.Image.open(arg)
-        elif type(arg) is PIL.Image.Image:
+        elif isinstance(arg, PIL.Image.Image):
             self.pil_image = arg
+        else:
+            raise Exception(f"Don't know what to do with {arg}")
+
+        if self.pil_image.mode == 'RGBA':
+            opaque = PIL.Image.new("RGB", self.pil_image.size, (255, 255, 255))
+            opaque.paste(self.pil_image, mask=self.pil_image.split()[3])
+            self.pil_image = opaque
 
     ###########################################################################
     # Send anything we don't recognize through to PIL

@@ -155,5 +155,5 @@ class Scanner():
             if result != wx.ID_YES:
                 break
         if images:
-            images[0].save('out.pdf', save_all=True, append_images=images[1:])
+            images[0].save('out.webp', lossless=True, save_all=True, append_images=images[1:])
         self.PopStatusText()
