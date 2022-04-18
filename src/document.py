@@ -242,16 +242,15 @@ class Document():
 
     @property
     def year(self):
-        print(self.date)
-        return self.date.year
+        return self.date.strftime('%Y')
 
     @property
     def month(self):
-        return self.date.month
+        return self.date.strftime('%m')
 
     @property
     def day(self):
-        return self.date.day
+        return self.date.strftime('%d')
 
     # @property
     # def md5(self):
@@ -276,9 +275,9 @@ class Document():
     @property
     def folder_path(self):
         return os.path.join(self.lib_dir,
-                            str(self.year),
-                            str(self.month),
-                            str(self.day),
+                            self.year,
+                            self.month,
+                            self.day,
                             self.id)
 
     @property
