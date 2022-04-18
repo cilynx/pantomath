@@ -4,6 +4,7 @@ import threading
 
 from .confmenu import ConfMenu
 
+
 class Scanner():
     """
     A simple Scanner object
@@ -74,11 +75,16 @@ class Scanner():
     def _init_scanner(self):
         wx.LogDebug('Initializing scanner')
         self.sane_version = sane.init()
-        self.devname, self.vendor, self.model, self.type = sane.get_devices()[0]
-        self.device = sane.open(self.devname)
-        self.PushStatusText(self.model + " Ready")
-        wx.LogDebug('Enabling Scan UI')
-        self.frame.EnableScanUI()
+        devices = sane.get_devices()
+        if devices:
+            self.devname, self.vendor, self.model, self.type = devices[0]
+            self.device = sane.open(self.devname)
+            self.PushStatusText(self.model + " Ready")
+            wx.LogDebug('Enabling Scan UI')
+            self.frame.EnableScanUI()
+        else:
+            wx.LogDebug('No scanner found')
+            self.PushStatusText('No scanner found')
 
     def scan_hardware_duplex(self, event=None):
         self.PushStatusText("Scanning pages from ADF hardware duplexer.")
