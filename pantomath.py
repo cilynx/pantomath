@@ -71,11 +71,14 @@ class MainFrame(wx.Frame):
 
     def ImportFromInbox(self, filepath):
         if self.InboxHasSettled():
-            wx.LogDebug(f'Importing {filepath}')
-            if self.library.import_file(filepath):
-                if self.config.Read("/Import/RemoveSource", ''):
-                    wx.LogDebug(f'Removing {filepath}')
-                    os.remove(filepath)
+            if os.path.exists(filepath):
+                wx.LogDebug(f'Importing {filepath}')
+                if self.library.import_file(filepath):
+                    if self.config.Read("/Import/RemoveSource", ''):
+                        wx.LogDebug(f'Removing {filepath}')
+                        os.remove(filepath)
+            else:
+                wx.LogDebug(f'{filepath} no longer exists.  It was probably a browser temp file')
         else:
             wx.LogDebug('Waiting for Inbox to settle')
             wx.CallLater(1000, self.ImportFromInbox, filepath)
