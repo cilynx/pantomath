@@ -59,9 +59,9 @@ class Library():
         if not kind:
             wx.MessageBox("Unknown filetype.  Maybe plaintext?")
         elif kind.mime.endswith('/pdf'):
-            self.import_pdf(filepath)
+            return self.import_pdf(filepath)
         elif kind.mime.startswith('image/'):
-            self.import_image(PIL.Image.open(filepath))
+            return self.import_image(PIL.Image.open(filepath))
         else:
             wx.MessageBox(f'{kind.mime} import not supported')
 
@@ -70,9 +70,12 @@ class Library():
         doc = Document(self.new_id())
         doc.original = pil_image
         doc.write_files(self.dir)
+        # TODO: Return whether image was successfully imported or not
+        return True
 
     def import_pdf(self, src):
         wx.LogDebug('Importing document to Library')
+        return False
         # date = datetime.now()
         # with open(src, 'rb') as file:
         #     src_md5 = hashlib.md5(file.read()).hexdigest()
