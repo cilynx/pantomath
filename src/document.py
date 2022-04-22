@@ -147,7 +147,13 @@ class Document():
     def processed(self):
         wx.LogDebug(f'processed(): {self._processed}')
         if not self._processed:
-            self._processed = Image(self.original).deskew().autocrop()
+            images = []
+            for page in range(self.original.n_frames):
+                self.original.seek(page)
+                images.append(Image(self.original).deskew().autocrop())
+            images[0].save(f'{self.id}.tiff', compression='lzma', save_all=True, append_images=images[1:])
+            self._processed = PIL.Image.open(f'{self.id}.tiff')
+            os.remove(f'{self.id}.tiff')
             self._processed.show()
         return self._processed
 
@@ -162,11 +168,16 @@ class Document():
             LINE = 4
             WORD = 5
 
-            wx.LogDebug('pages(): Running Tesseract')
+            wx.LogDebug('pages(): Loading Tesseract Data')
             data = pytesseract.image_to_data(self.processed,
                                              output_type=Output.DICT)
-            wx.LogDebug('pages(): Done with Tesseract')
+            wx.LogDebug('pages(): Done with image_to_data()')
             self._json['data'] = data
+
+            wx.LogDebug('pages(): Getting Sandwich PDF')
+            self._processed = pytesseract.image_to_pdf_or_hocr(self.processed,
+                                                               extension='pdf')
+            wx.LogDebug('pages(): Done with image_to_pdf_or_hocr()')
 
             page = None
             block = None
@@ -314,6 +325,6 @@ class Document():
     @property
     def processed_path(self):
         wx.LogDebug('processed_path()')
-        if type(self.processed) is PIL.Image.Image:
-            return os.path.join(self.folder_path, 'processed.webp')
+        if isinstance(self.processed, PIL.Image.Image):
+            return os.path.join(self.folder_path, 'processed.tiff')
         raise Exception("Non-Image processed files are not yet supported")
