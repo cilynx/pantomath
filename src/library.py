@@ -1,17 +1,10 @@
 import wx
-import os
 import PIL
 import glob
 import uuid
-import json
-import shutil
-import hashlib
 import filetype
 
-from datetime import datetime
-
 from .document import Document
-from .image import Image
 
 
 class Library():

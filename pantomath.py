@@ -2,14 +2,10 @@
 
 import wx
 import os
-import json
-import uuid
-import glob
 
 from datetime import datetime
 
-from src import Scanner, Image, Config, Library
-
+from src import Scanner, Config, Library
 from pages import Documents, Organizations
 
 
