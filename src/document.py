@@ -13,11 +13,12 @@ from .line import Line
 from .word import Word
 from .date import Date
 from .image import Image
+from .original import Original
 
 
 class Document():
 
-    def __init__(self, id=None):
+    def __init__(self, id=None, file=None):
         self.id = id
 
         self._processed = None
@@ -27,6 +28,9 @@ class Document():
         self._date = None
         self._dates = []
         self._pages = []
+
+        if isinstance(file, PIL.Image.Image):
+            self.original = Original(file)
 
     ###########################################################################
     # Factory Methods
@@ -72,29 +76,24 @@ class Document():
     ###########################################################################
 
     def write_original(self):
-        self.original.save(self.original_path, lossless=True, save_all=True)
+        self.original.save(self.original_path)
 
     def load_json(self, json_path):
         self.json_path = json_path
         with open(self.json_path, 'r') as json_file:
             self.json = json.load(json_file)
-    #     parts = list(os.path.split(json_path))
-    #     json_filename = parts.pop()
-    #     self.id = json_filename.split('.')[0]
-    #     self.filedir = parts.pop()
-    #     path = self.filedir.split(os.sep)
-    #     self.day = path.pop()
-    #     self.month = path.pop()
-    #     self.year = path.pop()
-    #     self.lib_dir = os.sep.join(path)
 
     def write_json(self):
         with open(self.json_path, 'w') as file:
             json.dump(self.json, file, indent=3, sort_keys=True, default=str)
 
     def write_processed(self):
-        wx.LogDebug('write_processed()')
-        self.processed.save(self.processed_path)
+        wx.LogDebug('Document.write_processed(): Getting Sandwich PDF')
+        data = pytesseract.image_to_pdf_or_hocr(self.processed, extension='pdf')
+        wx.LogDebug('Document.write_processed(): Writing Bytes')
+        with open(self.processed_path, 'w+b') as file:
+            file.write(data)
+        wx.LogDebug('Document.write_processed(END)')
 
     def write_thumb(self):
         wx.LogDebug('write_thumb()')
@@ -145,16 +144,19 @@ class Document():
 
     @property
     def processed(self):
-        wx.LogDebug(f'processed(): {self._processed}')
+        wx.LogDebug('Document.processed()')
+        wx.LogDebug(f'Document.processed(): _processed before: {self._processed}')
         if not self._processed:
-            images = []
-            for page in range(self.original.n_frames):
-                self.original.seek(page)
-                images.append(Image(self.original).deskew().autocrop())
-            images[0].save(f'{self.id}.tiff', compression='lzma', save_all=True, append_images=images[1:])
+            pages = [page.deskew().autocrop() for page in self.original.pages]
+            pages[0].save(f'{self.id}.tiff',
+                          compression='lzma',
+                          save_all=True,
+                          append_images=pages[1:])
             self._processed = PIL.Image.open(f'{self.id}.tiff')
             os.remove(f'{self.id}.tiff')
             self._processed.show()
+        wx.LogDebug(f'Document.processed(): _processed after: {self._processed}')
+        wx.LogDebug('Document.processed(END)')
         return self._processed
 
     @property
@@ -173,11 +175,6 @@ class Document():
                                              output_type=Output.DICT)
             wx.LogDebug('pages(): Done with image_to_data()')
             self._json['data'] = data
-
-            wx.LogDebug('pages(): Getting Sandwich PDF')
-            self._processed = pytesseract.image_to_pdf_or_hocr(self.processed,
-                                                               extension='pdf')
-            wx.LogDebug('pages(): Done with image_to_pdf_or_hocr()')
 
             page = None
             block = None
@@ -264,28 +261,24 @@ class Document():
 
     @property
     def year(self):
-        return self.date.year
+        if isinstance(self.date.year, str):
+            return self.date.year
+        else:
+            return self.date.strftime('%Y')
 
     @property
     def month(self):
-        return self.date.month
+        if isinstance(self.date.month, str):
+            return self.date.month
+        else:
+            return self.date.strftime('%m')
 
     @property
     def day(self):
-        return self.date.day
-
-    # @property
-    # def md5(self):
-    #     if 'md5' not in self.json:
-    #         if 'import' in self.json and 'md5' in self.json['import']:
-    #             self.json['md5'] = self.json['import']['md5']
-    #             del self.json['import']['md5']
-    #         else:
-    #             with open(self.processed_file_path, 'rb') as file:
-    #                 self.json['md5'] = hashlib.md5(file.read()).hexdigest()
-    #         self.write_json()
-    #     assert len(self.json['md5']) == 32
-    #     return self.json['md5']
+        if isinstance(self.date.day, str):
+            return self.date.day
+        else:
+            return self.date.strftime('%d')
 
     @property
     def json(self):
@@ -296,11 +289,19 @@ class Document():
 
     @property
     def folder_path(self):
-        return os.path.join(self.lib_dir,
+        wx.LogDebug('Document.folder_path()')
+        wx.LogDebug(f'Document.folder_path(): lib_dir: {self.lib_dir}')
+        wx.LogDebug(f'Document.folder_path(): year: {self.year}')
+        wx.LogDebug(f'Document.folder_path(): month: {self.month}')
+        wx.LogDebug(f'Document.folder_path(): day: {self.day}')
+        wx.LogDebug(f'Document.folder_path(): id: {self.id}')
+        path = os.path.join(self.lib_dir,
                             self.year,
                             self.month,
                             self.day,
                             self.id)
+        wx.LogDebug(f'Document.folder_path(): path: {path}')
+        return path
 
     @property
     def json_path(self):
@@ -314,9 +315,7 @@ class Document():
 
     @property
     def original_path(self):
-        if isinstance(self.original, PIL.Image.Image):
-            return os.path.join(self.folder_path, 'original.webp')
-        raise Exception("Non-Image originals are not yet supported")
+        return os.path.join(self.folder_path, 'original' + self.original.ext)
 
     @property
     def thumb_path(self):
@@ -324,7 +323,4 @@ class Document():
 
     @property
     def processed_path(self):
-        wx.LogDebug('processed_path()')
-        if isinstance(self.processed, PIL.Image.Image):
-            return os.path.join(self.folder_path, 'processed.tiff')
-        raise Exception("Non-Image processed files are not yet supported")
+        return os.path.join(self.folder_path, 'processed.pdf')

@@ -60,8 +60,7 @@ class Library():
 
     def import_image(self, pil_image):
         wx.LogDebug('Importing Image')
-        doc = Document(self.new_id())
-        doc.original = pil_image
+        doc = Document(self.new_id(), pil_image)
         doc.write_files(self.dir)
         # TODO: Return whether image was successfully imported or not
         return True
