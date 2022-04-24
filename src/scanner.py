@@ -79,12 +79,12 @@ class Scanner():
         if devices:
             self.devname, self.vendor, self.model, self.type = devices[0]
             self.device = sane.open(self.devname)
-            self.PushStatusText(self.model + " Ready")
+            wx.CallAfter(self.PushStatusText, self.model + " Ready")
             wx.LogDebug('Enabling Scan UI')
             self.frame.EnableScanUI()
         else:
             wx.LogDebug('No scanner found')
-            self.PushStatusText('No scanner found')
+            wx.CallAfter(self.PushStatusText, 'No scanner found')
 
     def scan_hardware_duplex(self, event=None):
         self.PushStatusText("Scanning pages from ADF hardware duplexer.")
@@ -110,16 +110,17 @@ class Scanner():
         self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
         self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max
         # print(self.device.__dict__)
-        images = list(self.device.multi_scan())
+        pages = list(self.device.multi_scan())
         if manual_duplex:
             wx.MessageDialog(self.frame,
                              '',
                              'Load the stack face-down back into the ADF',
                              wx.OK).ShowModal()
             backs = list(self.device.multi_scan())
-            images = [j for i in zip(images, reversed(backs)) for j in i]
-        if images:
-            images[0].save('out.pdf', save_all=True, append_images=images[1:])
+            pages = [j for i in zip(pages, reversed(backs)) for j in i]
+        if pages:
+            # images[0].save('out.pdf', save_all=True, append_images=images[1:])
+            self.frame.library.import_images(pages)
         else:
             wx.MessageBox("Is the document loaded in the ADF?")
         self.PopStatusText()
@@ -140,20 +141,45 @@ class Scanner():
 
     def scan_multiple_from_flatbed(self, event=None):
         self.PushStatusText("Scanning multiple pages from flatbed.")
-        thread = threading.Thread(target=self._scan_multiple_from_flatbed)
+        self.pages = []
+        thread = threading.Thread(target=self._scan_one_of_multiple)
         thread.start()
         return thread
 
-    def _scan_multiple_from_flatbed(self):
+    def receive_one_of_multiple(self, page):
+        self.pages.append(page)
+        dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {len(self.pages)}", wx.YES_NO)
+        dialog.SetYesNoLabels("Scan Another Page", "All Done")
+        result = dialog.ShowModal()
+        if result == wx.ID_YES:
+            threading.Thread(target=self._scan_one_of_multiple).start()
+        else:
+            self.PopStatusText()
+            self.frame.library.import_images(self.pages)
+            self.pages = []
+
+    def _scan_one_of_multiple(self, event=None):
+        wx.LogDebug('Scanner._scan_multiple_from_flatbed(): START')
         self.device.source = 'Flatbed'
-        images = []
-        while True:
-            images.append(self.scan())
-            dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {len(images)}", wx.YES_NO)
-            dialog.SetYesNoLabels("Scan Another Page", "All Done")
-            result = dialog.ShowModal()
-            if result != wx.ID_YES:
-                break
-        if images:
-            images[0].save('out.webp', lossless=True, save_all=True, append_images=images[1:])
-        self.PopStatusText()
+        page = self.scan()
+        wx.CallAfter(self.receive_one_of_multiple, page)
+        # images = []
+        # while True:
+        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Inside loop')
+        #     images.append(self.scan())
+        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): After scan')
+        #     dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {len(images)}", wx.YES_NO)
+        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Created dialog')
+        #     dialog.SetYesNoLabels("Scan Another Page", "All Done")
+        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Set labels')
+        #     result = dialog.ShowModal()
+        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Showed dialog')
+        #     if result != wx.ID_YES:
+        #         break
+        # wx.LogDebug('Scanner._scan_multiple_from_flatbed(): After loop')
+        # if images:
+        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Saving image(s)')
+        #     images[0].save('out.webp', lossless=True, save_all=True, append_images=images[1:])
+        # wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Popping status')
+        # self.PopStatusText()
+        # wx.LogDebug('Scanner._scan_multiple_from_flatbed(): END')

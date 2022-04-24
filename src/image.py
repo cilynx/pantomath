@@ -41,7 +41,7 @@ class Image():
             else:
                 return self.pil_image.__getattribute__(name)
         else:
-            raise Exception(f"Don't know how to handle {name}")
+            raise AttributeError
 
     ###########################################################################
     # Wrappers

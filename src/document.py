@@ -18,7 +18,7 @@ from .original import Original
 
 class Document():
 
-    def __init__(self, id=None, file=None):
+    def __init__(self, id=None, pages=None):
         self.id = id
 
         self._processed = None
@@ -29,8 +29,7 @@ class Document():
         self._dates = []
         self._pages = []
 
-        if isinstance(file, PIL.Image.Image):
-            self.original = Original(file)
+        self.original = Original(pages)
 
     ###########################################################################
     # Factory Methods
@@ -89,7 +88,13 @@ class Document():
 
     def write_processed(self):
         wx.LogDebug('Document.write_processed(): Getting Sandwich PDF')
-        data = pytesseract.image_to_pdf_or_hocr(self.processed, extension='pdf')
+        wx.LogDebug(f'self.processed has {self.processed.n_frames} pages')
+        self.processed.save(f'{self.id}.tiff',
+                            compression='lzma',
+                            lossless=True,
+                            save_all=True)
+        data = pytesseract.image_to_pdf_or_hocr(f'{self.id}.tiff', extension='pdf')
+        os.remove(f'{self.id}.tiff')
         wx.LogDebug('Document.write_processed(): Writing Bytes')
         with open(self.processed_path, 'w+b') as file:
             file.write(data)
@@ -154,7 +159,6 @@ class Document():
                           append_images=pages[1:])
             self._processed = PIL.Image.open(f'{self.id}.tiff')
             os.remove(f'{self.id}.tiff')
-            self._processed.show()
         wx.LogDebug(f'Document.processed(): _processed after: {self._processed}')
         wx.LogDebug('Document.processed(END)')
         return self._processed

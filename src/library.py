@@ -60,10 +60,15 @@ class Library():
 
     def import_image(self, pil_image):
         wx.LogDebug('Importing Image')
-        doc = Document(self.new_id(), pil_image)
+        doc = Document(self.new_id(), [pil_image])
         doc.write_files(self.dir)
         # TODO: Return whether image was successfully imported or not
         return True
+
+    def import_images(self, pil_images):
+        wx.LogDebug('Library.import_images()')
+        doc = Document(self.new_id(), pil_images)
+        doc.write_files(self.dir)
 
     def import_pdf(self, src):
         wx.LogDebug('Importing document to Library')
