@@ -88,42 +88,62 @@ class Scanner():
 
     def scan_hardware_duplex(self, event=None):
         self.PushStatusText("Scanning pages from ADF hardware duplexer.")
-        thread = threading.Thread(target=self._scan_adf, args=('ADF Duplex',))
+        self.frame.config.Write('/Scan/Source', 'ADF Duplex')
+        self.pages = []
+        thread = threading.Thread(target=self._scan_adf)
         thread.start()
         return thread
 
     def scan_manual_duplex(self, event=None):
         self.PushStatusText("Manually duplexing pages from ADF.")
-        thread = threading.Thread(target=self._scan_adf, args=('ADF', True))
+        self.frame.config.Write('/Scan/Source', 'Manual Duplex')
+        self.pages = []
+        thread = threading.Thread(target=self._scan_adf)
         thread.start()
         return thread
 
     def scan_adf(self, event=None):
         self.PushStatusText("Scanning fronts from ADF.")
+        self.frame.config.Write('/Scan/Source', 'ADF')
+        self.pages = []
         thread = threading.Thread(target=self._scan_adf)
         thread.start()
         return thread
 
-    def _scan_adf(self, source='ADF', manual_duplex=False):
+    def receive_pages_from_adf(self, pages):
+        if pages:
+            if self.pages:
+                self.pages = [j for i in zip(self.pages, reversed(pages)) for j in i]
+                self.frame.library.import_images(self.pages)
+                self.pages = []
+                self.PopStatusText()
+            else:
+                self.pages.extend(pages)
+                if self.frame.config.Read('/Scan/Source', '') == 'Manual Duplex':
+                    wx.MessageDialog(self.frame,
+                                     '',
+                                     'Load the stack face-down back into the ADF',
+                                     wx.OK).ShowModal()
+                    threading.Thread(target=self._scan_adf).start()
+                else:
+                    self.frame.library.import_images(self.pages)
+                    self.pages = []
+                    self.PopStatusText()
+        else:
+            wx.MessageBox("Is the document loaded in the ADF?")
+
+    def _scan_adf(self):
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
-        self.device.source = source
+        source = self.frame.config.Read('/Scan/Source', 'ADF')
+        if source == 'Manual Duplex':
+            self.device.source = 'ADF'
+        else:
+            self.device.source = source
         self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
         self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max
         # print(self.device.__dict__)
         pages = list(self.device.multi_scan())
-        if manual_duplex:
-            wx.MessageDialog(self.frame,
-                             '',
-                             'Load the stack face-down back into the ADF',
-                             wx.OK).ShowModal()
-            backs = list(self.device.multi_scan())
-            pages = [j for i in zip(pages, reversed(backs)) for j in i]
-        if pages:
-            # images[0].save('out.pdf', save_all=True, append_images=images[1:])
-            self.frame.library.import_images(pages)
-        else:
-            wx.MessageBox("Is the document loaded in the ADF?")
-        self.PopStatusText()
+        wx.CallAfter(self.receive_pages_from_adf, pages)
 
     def scan_one_from_flatbed(self, event=None):
         self.PushStatusText("Scanning one page from flatbed.")

@@ -1,4 +1,5 @@
 import re
+import dateutil.parser
 
 from .placeable import Placeable
 
@@ -52,10 +53,12 @@ class Word(Placeable):
             return False
 
         # 03/21/2022
-        if re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}', self.text):
+        # if re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}', self.text):
+        try:
+            dateutil.parser.parse(self.text)
             self.type = 'date'
             return True
-        else:
+        except:
             return False
 
     @property
@@ -69,9 +72,9 @@ class Word(Placeable):
 
         # 2 or 4-digit year?
         if re.search(r'\d{2,4}', self.text):
-            # 1 or 2-digit day followed by comma?
+            # 1 or 2-digit day followed by comma and a space?
             pw = self.prev
-            if pw and re.search(r'\d{1,2}\,', pw.text) and 0 < int(pw.text) < 32:
+            if pw and re.search(r'\d{1,2}\, ', pw.text) and 0 < int(pw.text) < 32:
                 # Month?
                 ppw = pw.prev
                 if ppw and re.search(months, ppw.text, re.IGNORECASE):
