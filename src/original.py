@@ -20,10 +20,10 @@ class Original():
         if isinstance(self.pages[0], Image):
             print(f'Original.save(): Saving {self.pages}')
             self.pages[0].save(filepath,
-                            compression='lzma',
-                            lossless=True,
-                            save_all=True,
-                            append_images=self.pages[1:])
+                               compression='lzma',
+                               lossless=True,
+                               save_all=True,
+                               append_images=self.pages[1:])
         else:
             raise ValueError(f"Don't know how to save {self.pages}")
         print('Original.save(END)')
