@@ -39,7 +39,7 @@ class MainFrame(wx.Frame):
     def CreateFileSystemWatcher(self):
         self._fswatcher = wx.FileSystemWatcher()
         self._fswatcher.Bind(wx.EVT_FSWATCHER, self.OnFSEvent)
-        self.inbox = os.path.join(self.library.dir, 'inbox/')
+        self.inbox = os.path.join(self.library.dir, 'Inbox/')
         os.makedirs(self.inbox, exist_ok=True)
         self._fswatcher.Add(self.inbox)
 
