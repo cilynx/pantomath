@@ -71,8 +71,9 @@ class Library():
         doc.write_files(self.dir)
 
     def import_pdf(self, src):
-        wx.LogDebug('Importing document to Library')
-        return False
+        wx.LogDebug('Importing PDF to Library')
+        doc = Document(self.new_id(), src)
+        doc.write_files(self.dir)
         # date = datetime.now()
         # with open(src, 'rb') as file:
         #     src_md5 = hashlib.md5(file.read()).hexdigest()
