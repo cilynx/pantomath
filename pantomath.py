@@ -59,7 +59,7 @@ class MainFrame(wx.Frame):
         wx.LogDebug(f'ChangeType: {flags[event.ChangeType]}')
         wx.LogDebug(event.Path)
         self._last_fs_event = datetime.now()
-        if event.ChangeType == wx.FSW_EVENT_CREATE:
+        if event.ChangeType == wx.FSW_EVENT_CREATE or event.ChangeType == wx.FSW_EVENT_RENAME:
             self.ImportFromInbox(event.Path)
 
     def InboxHasSettled(self):
