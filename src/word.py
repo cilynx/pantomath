@@ -53,13 +53,18 @@ class Word(Placeable):
             return False
 
         # 03/21/2022
-        # if re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}', self.text):
-        try:
-            dateutil.parser.parse(self.text)
-            self.type = 'date'
+        if re.search(r'\d{1,2}/\d{1,2}/\d{2,4}', self.text):
             return True
-        except:
-            return False
+
+        # This is overly greedy -- every 4-digit number is assumed
+        # to be a year with "today" as the month and day
+        #
+        # try:
+        #     dateutil.parser.parse(self.text)
+        #     self.type = 'date'
+        #     return True
+        # except:
+        #     return False
 
     @property
     def is_year(self):
@@ -70,6 +75,7 @@ class Word(Placeable):
 
         months = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 
+        # Jan(uary) 1, 1970
         # 2 or 4-digit year?
         if re.search(r'\d{2,4}', self.text):
             # 1 or 2-digit day followed by comma and a space?
