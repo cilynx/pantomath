@@ -134,6 +134,7 @@ class Scanner():
 
     def _scan_adf(self):
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
+        self.device.mode = 'color'
         source = self.frame.config.Read('/Scan/Source', 'ADF')
         if source == 'Manual Duplex':
             self.device.source = 'ADF'
