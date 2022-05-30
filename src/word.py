@@ -52,9 +52,14 @@ class Word(Placeable):
         if re.findall(r'/00/', self.text):
             return False
 
-        # 03/21/2022
-        if re.search(r'\d{1,2}/\d{1,2}/\d{2,4}', self.text):
-            return True
+        # m[m]/d[d]/yy[yy]
+        match = re.search(r'(\d{1,2})/(\d{1,2})/\d{2,4}', self.text)
+        if match:
+            if 0 < int(match.group(1)) < 13 and 0 < int(match.group(2)) < 32:
+                return True
+            else:
+                print(f"Date isn't a date. Possibly bad OCR: {self.text}")
+                return False
 
         # This is overly greedy -- every 4-digit number is assumed
         # to be a year with "today" as the month and day
