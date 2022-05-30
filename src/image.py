@@ -166,7 +166,8 @@ class Image():
             elif area == prev_area:
                 equal_count += 1
             prev_area = area
-        return 0
+        print(f'No skew ({minimum}, {maximum}) is better than the original')
+        return 0, orig_image.getbbox()
 
     def deskew(self, minimum=-45, maximum=45, step=1):
         image = self.rotate(self.skew())
