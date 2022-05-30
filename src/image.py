@@ -164,7 +164,7 @@ class Image():
                 area = orig_image.width * orig_image.height
             # print(min, guess, max, area, prev_area, lower, upper, right, left)
             if area > prev_area:
-                if equal_count:
+                if equal_count and bbox:
                     angle = guess - dir*step*equal_count/2
                     # print(f'################################################ {self.size}')
                     bbox = [i * max(self.size) / 400 for i in bbox]
