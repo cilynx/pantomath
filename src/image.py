@@ -157,7 +157,11 @@ class Image():
             # draw.rectangle(image.getbbox(), outline=(0, 255, 0))
             # image.show()
             # (Lower - Upper) * (Right - Left)
-            area = (bbox[3]-bbox[1])*(bbox[2]-bbox[0])
+            if bbox:
+                area = (bbox[3]-bbox[1])*(bbox[2]-bbox[0])
+            else:
+                print('Bbox went away -- setting area to entire image')
+                area = orig_image.width * orig_image.height
             # print(min, guess, max, area, prev_area, lower, upper, right, left)
             if area > prev_area:
                 if equal_count:
