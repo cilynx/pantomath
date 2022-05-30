@@ -7,7 +7,7 @@ class Config(wx.Config):
         super().__init__(name)
 
     def Read(self, *args):
-        wx.LogDebug(f"Config.Read({args})")
+        wx.LogDebug(f"Config.Read({args}) = {super().Read(*args)}")
         return super().Read(*args)
 
     def Write(self, *args):

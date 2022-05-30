@@ -136,10 +136,8 @@ class Scanner():
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.mode = 'color'
         source = self.frame.config.Read('/Scan/Source', 'ADF')
-        if source == 'Manual Duplex':
-            self.device.source = 'ADF'
-        else:
-            self.device.source = source
+        print(f'Scan Source: {source}')
+        self.device.source = 'ADF' if source == 'Manual Duplex' else source
         self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
         self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max
         # print(self.device.__dict__)
