@@ -141,7 +141,11 @@ class Image():
         orig_image = orig_image.invert()
         orig_image = orig_image.filter(ImageFilter.MaxFilter(3))
         orig_image = orig_image.filter(ImageFilter.MaxFilter(3))
-        left, upper, right, lower = orig_image.getbbox()
+        if orig_image.getbbox():
+            left, upper, right, lower = orig_image.getbbox()
+        else:
+            print('Got None for bbox -- returning 0 skew and full image size')
+            return 0, (0, 0, orig_image.width, orig_image.height)
         prev_area = (lower-upper)*(right-left)
         equal_count = 0
         # print(min, guess, max, prev_area, lower, upper, right, left)
