@@ -77,6 +77,7 @@ class Scanner():
         self.sane_version = sane.init()
         devices = sane.get_devices()
         if devices:
+            print(devices)
             self.devname, self.vendor, self.model, self.type = devices[0]
             self.device = sane.open(self.devname)
             wx.CallAfter(self.PushStatusText, self.model + " Ready")
