@@ -131,7 +131,8 @@ class Scanner():
                     self.pages = []
                     self.PopStatusText()
         else:
-            wx.MessageBox("Is the document loaded in the ADF?")
+            wx.MessageBox("Please load the document into the ADF.")
+            threading.Thread(target=self._scan_adf).start()
 
     def _scan_adf(self):
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
