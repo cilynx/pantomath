@@ -1,5 +1,6 @@
+import wx
 import re
-import dateutil.parser
+# import dateutil.parser
 
 from .placeable import Placeable
 
@@ -53,12 +54,16 @@ class Word(Placeable):
             return False
 
         # m[m]/d[d]/yy[yy]
-        match = re.search(r'(\d{1,2})/(\d{1,2})/\d{2,4}', self.text)
+        match = re.search(r'(\d{1,2})/(\d{1,2})/(\d{2,4})', self.text)
         if match:
             if 0 < int(match.group(1)) < 13 and 0 < int(match.group(2)) < 32:
+                newText = '/'.join(match.groups())
+                if newText != self.text:
+                    wx.LogVerbose(f'Date has extra garbage.  Converting {self.text} to {newText}')
+                    self.text = newText
                 return True
             else:
-                print(f"Date isn't a date. Possibly bad OCR: {self.text}")
+                wx.LogVerbose(f"Date isn't a date. Possibly bad OCR: {self.text}")
                 return False
 
         # This is overly greedy -- every 4-digit number is assumed
