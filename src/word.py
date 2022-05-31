@@ -96,7 +96,7 @@ class Word(Placeable):
                     wx.LogDebug(f'Could be a day-of-month: {match.group(1)}')
                     # Month?
                     if ppw := pw.prev:
-                        wx.LogDebug(f'Testing for monthness: {ppw.text}...', end='')
+                        wx.LogDebug(f'Testing for monthness: {ppw.text}...')
                         if re.search(months, ppw.text, re.IGNORECASE):
                             wx.LogDebug('yup')
                             self.type = 'year'
