@@ -1,3 +1,4 @@
+import wx
 import os
 import shutil
 import filetype
