@@ -138,13 +138,17 @@ class Scanner():
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.mode = 'color'
         source = self.frame.config.Read('/Scan/Source', 'ADF')
-        print(f'Scan Source: {source}')
+        wx.LogVerbose(f'Scan Source: {source}')
         self.device.source = 'ADF' if source == 'Manual Duplex' else source
         self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
         self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max
-        # print(self.device.__dict__)
-        pages = list(self.device.multi_scan())
-        wx.CallAfter(self.receive_pages_from_adf, pages)
+        # wx.LogDebug(self.device.__dict__)
+        try:
+            pages = list(self.device.multi_scan())
+            wx.CallAfter(self.receive_pages_from_adf, pages)
+        except sane._sane.error as e:
+            wx.LogWarning(repr(e))
+            self.PopStatusText()
 
     def scan_one_from_flatbed(self, event=None):
         self.PushStatusText("Scanning one page from flatbed.")
