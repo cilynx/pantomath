@@ -4,6 +4,9 @@ import shutil
 import filetype
 import pdf2image
 
+from PIL import ImageSequence
+from PIL import Image as PILImage
+
 from .image import Image
 
 
@@ -21,6 +24,13 @@ class Original():
         elif isinstance(pages[0], Image):
             self.pages = pages
         else:
+            if len(pages) == 1 and pages[0].is_animated:
+                pil_images = []
+                for frame in ImageSequence.Iterator(pages[0]):
+                    image = PILImage.new("RGBA", frame.size)
+                    image.paste(frame)
+                    pil_images.append(image)
+                pages = pil_images
             self.pages = [Image(page) for page in pages]
 
     @property
