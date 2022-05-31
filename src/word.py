@@ -82,17 +82,23 @@ class Word(Placeable):
 
         # Jan(uary) 1, 1970
         # 2 or 4-digit year?
-        if re.search(r'\d{2,4}', self.text):
-            # 1 or 2-digit day followed by comma and a space?
-            pw = self.prev
-            if pw and re.search(r'\d{1,2}\, ', pw.text) and 0 < int(pw.text) < 32:
-                # Month?
-                ppw = pw.prev
-                if ppw and re.search(months, ppw.text, re.IGNORECASE):
-                    self.type = 'year'
-                    ppw.type = 'month'
-                    pw.type = 'day'
-                    return True
+        if match := re.search(r'(\d{2,4})', self.text):
+            print(f'Could be a year: {match.group(1)}')
+            # 1 or 2-digit day followed by comma?
+            if pw := self.prev:
+                match = re.search(r'(\d{1,2}),', pw.text)
+                if match and 0 < int(match.group(1)) < 32:
+                    print(f'Could be a day-of-month: {match.group(1)}')
+                    # Month?
+                    if ppw := pw.prev:
+                        print(f'Testing for monthness: {ppw.text}...', end='')
+                        if re.search(months, ppw.text, re.IGNORECASE):
+                            print('yup')
+                            self.type = 'year'
+                            ppw.type = 'month'
+                            pw.type = 'day'
+                            return True
+                        print('nope')
         return False
 
     ###########################################################################
