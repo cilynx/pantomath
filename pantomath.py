@@ -273,4 +273,5 @@ class Pantomath(wx.App):
 if __name__ == '__main__':
     app = Pantomath()
     app.m_frame.Show()
+    app.m_frame.SetIcon(wx.Icon('pantomath.ico', wx.BITMAP_TYPE_ICO))
     app.MainLoop()
