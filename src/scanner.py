@@ -75,17 +75,22 @@ class Scanner():
     def _init_scanner(self):
         wx.LogDebug('Initializing scanner')
         self.sane_version = sane.init()
-        devices = sane.get_devices()
-        if devices:
-            print(devices)
-            self.devname, self.vendor, self.model, self.type = devices[0]
-            self.device = sane.open(self.devname)
-            wx.CallAfter(self.PushStatusText, self.model + " Ready")
-            wx.LogDebug('Enabling Scan UI')
-            self.frame.EnableScanUI()
-        else:
-            wx.LogDebug('No scanner found')
-            wx.CallAfter(self.PushStatusText, 'No scanner found')
+        while True:
+            try:
+                devices = sane.get_devices()
+                if devices:
+                    wx.LogDebug(devices)
+                    self.devname, self.vendor, self.model, self.type = devices[0]
+                    self.device = sane.open(self.devname)
+                    wx.CallAfter(self.PushStatusText, self.model + " Ready")
+                    wx.LogDebug('Enabling Scan UI')
+                    self.frame.EnableScanUI()
+                else:
+                    wx.LogDebug('No scanner found')
+                    wx.CallAfter(self.PushStatusText, 'No scanner found')
+                break
+            except sane._sane.error as e:
+                wx.LogVerbose(repr(e))
 
     def scan_hardware_duplex(self, event=None):
         self.PushStatusText("Scanning pages from ADF hardware duplexer.")
