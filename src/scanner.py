@@ -79,7 +79,7 @@ class Scanner():
             try:
                 devices = sane.get_devices()
                 if devices:
-                    wx.LogDebug(devices)
+                    wx.LogDebug(repr(devices))
                     self.devname, self.vendor, self.model, self.type = devices[0]
                     self.device = sane.open(self.devname)
                     wx.CallAfter(self.PushStatusText, self.model + " Ready")
@@ -90,7 +90,7 @@ class Scanner():
                     wx.CallAfter(self.PushStatusText, 'No scanner found')
                 break
             except sane._sane.error as e:
-                wx.LogVerbose(repr(e))
+                wx.LogDebug(repr(e))
 
     def scan_hardware_duplex(self, event=None):
         self.PushStatusText("Scanning pages from ADF hardware duplexer.")
@@ -143,7 +143,7 @@ class Scanner():
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.mode = 'color'
         source = self.frame.config.Read('/Scan/Source', 'ADF')
-        wx.LogVerbose(f'Scan Source: {source}')
+        wx.LogDebug(f'Scan Source: {source}')
         self.device.source = 'ADF' if source == 'Manual Duplex' else source
         self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
         self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max

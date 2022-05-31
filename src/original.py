@@ -30,14 +30,14 @@ class Original():
             raise ValueError(f"Don't know extension for {self.pages[0]}")
 
     def save(self, filepath):
-        print(f'Original.save({filepath})')
+        wx.LogDebug(f'Original.save({filepath})')
         if self.original_path:
             ext = os.path.splitext(self.original_path)[1]
             dir = os.path.dirname(filepath)
             dest = os.path.join(dir, 'original.' + ext)
             shutil.move(self.original_path, dest)
         if isinstance(self.pages[0], Image):
-            print(f'Original.save(): Saving {self.pages}')
+            wx.LogDebug(f'Original.save(): Saving {self.pages}')
             self.pages[0].save(filepath,
                                compression='lzma',
                                lossless=True,
@@ -45,4 +45,4 @@ class Original():
                                append_images=self.pages[1:])
         else:
             raise ValueError(f"Don't know how to save {self.pages}")
-        print('Original.save(END)')
+        wx.LogDebug('Original.save(END)')

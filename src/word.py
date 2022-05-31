@@ -59,11 +59,11 @@ class Word(Placeable):
             if 0 < int(match.group(1)) < 13 and 0 < int(match.group(2)) < 32:
                 newText = '/'.join(match.groups())
                 if newText != self.text:
-                    wx.LogVerbose(f'Date has extra garbage.  Converting {self.text} to {newText}')
+                    wx.LogDebug(f'Date has extra garbage.  Converting {self.text} to {newText}')
                     self.text = newText
                 return True
             else:
-                wx.LogVerbose(f"Date isn't a date. Possibly bad OCR: {self.text}")
+                wx.LogDebug(f"Date isn't a date. Possibly bad OCR: {self.text}")
                 return False
 
         # This is overly greedy -- every 4-digit number is assumed
@@ -88,22 +88,22 @@ class Word(Placeable):
         # Jan(uary) 1, 1970
         # 2 or 4-digit year?
         if match := re.search(r'(\d{2,4})', self.text):
-            print(f'Could be a year: {match.group(1)}')
+            wx.LogDebug(f'Could be a year: {match.group(1)}')
             # 1 or 2-digit day followed by comma?
             if pw := self.prev:
                 match = re.search(r'(\d{1,2}),', pw.text)
                 if match and 0 < int(match.group(1)) < 32:
-                    print(f'Could be a day-of-month: {match.group(1)}')
+                    wx.LogDebug(f'Could be a day-of-month: {match.group(1)}')
                     # Month?
                     if ppw := pw.prev:
-                        print(f'Testing for monthness: {ppw.text}...', end='')
+                        wx.LogDebug(f'Testing for monthness: {ppw.text}...', end='')
                         if re.search(months, ppw.text, re.IGNORECASE):
-                            print('yup')
+                            wx.LogDebug('yup')
                             self.type = 'year'
                             ppw.type = 'month'
                             pw.type = 'day'
                             return True
-                        print('nope')
+                        wx.LogDebug('nope')
         return False
 
     ###########################################################################
@@ -112,12 +112,12 @@ class Word(Placeable):
 
     def continues(self, contig):
         if self.next_to(contig.last_word):
-            print(f'{self.text} is next_to {contig.last_word.text}')
+            wx.LogDebug(f'{self.text} is next_to {contig.last_word.text}')
             return True
         if self.text == 'Please':
-            print(f'|just_below: {self.just_below(contig)}|aligend_with: {self.aligned_with(contig)}|{contig.text}')
+            wx.LogDebug(f'|just_below: {self.just_below(contig)}|aligend_with: {self.aligned_with(contig)}|{contig.text}')
         if self.just_below(contig) and self.aligned_with(contig):
-            print(f'{self.text} is just_below and aligned_with {contig.last_word.text}')
+            wx.LogDebug(f'{self.text} is just_below and aligned_with {contig.last_word.text}')
             self.text = f'\n{self.text}'
             return True
         return False

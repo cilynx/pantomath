@@ -14,7 +14,7 @@ class ConfMenu(wx.Menu):
         def handler(event):
             for item in args:
                 if event.GetId() == item['obj'].GetId():
-                    print(f"Writing {self.prefix}/{kwargs['confKey']}: {item['confValue']}")
+                    wx.LogDebug(f"Writing {self.prefix}/{kwargs['confKey']}: {item['confValue']}")
                     self.frame.config.Write(f"{self.prefix}/{kwargs['confKey']}", item['confValue'])
                     self.frame.SetStatusText(f"{self.prefix.replace('/','')} {kwargs['confKey']} is now {item['confValue']}", 1)
 
@@ -24,5 +24,5 @@ class ConfMenu(wx.Menu):
 
         for item in args:
             if self.frame.config.Read(f"{self.prefix}/{kwargs['confKey']}") == item['confValue']:
-                print(f"Read {self.prefix}/{kwargs['confKey']}: {item['confValue']}")
+                wx.LogDebug(f"Read {self.prefix}/{kwargs['confKey']}: {item['confValue']}")
                 self.Check(item['obj'].GetId(), True)

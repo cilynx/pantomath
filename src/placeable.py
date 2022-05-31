@@ -1,6 +1,6 @@
 class Placeable:
     def __init__(self, left, top, width, height):
-        # print(f'{type(self)}.__init__{left, top, width, height}')
+        # wx.LogDebug(f'{type(self)}.__init__{left, top, width, height}')
         self.left = left
         self.top = top
         self.width = width
@@ -42,7 +42,7 @@ class Placeable:
         # TODO: Not sure I like the Line requirement here.
         #       Spatial v-align might be a more versatile test.
         if self.text == 'access' and placeable.text == 'network':
-            print(f'|{self.x_space_between(placeable)}|{self.height}|{placeable.height}|')
+            wx.LogDebug(f'|{self.x_space_between(placeable)}|{self.height}|{placeable.height}|')
         if self.line != placeable.line:
             return False
         return self.x_space_between(placeable) < 2 * self.height
@@ -62,13 +62,13 @@ class Placeable:
     def aligned_with(self, placeable):
         # Self is H-Aligned with Placeable in any possible way
         if self.left_aligned(placeable):
-            print("left_aligned")
+            wx.LogDebug("left_aligned")
             return 'left'
         if self.right_aligned(placeable):
-            print("right_aligned")
+            wx.LogDebug("right_aligned")
             return 'right'
         if self.center_aligned(placeable):
-            print("center_aligned")
+            wx.LogDebug("center_aligned")
             return 'center'
         return False
 

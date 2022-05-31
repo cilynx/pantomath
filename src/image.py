@@ -1,5 +1,6 @@
 import PIL.Image
 import types
+import wx
 
 from PIL import ImageOps, ImageFilter
 from itertools import chain, product
@@ -48,10 +49,10 @@ class Image():
     ###########################################################################
 
     def _Image(self, name, *args, **kwargs):
-        # print(f"_Image(): {self.pil_image} {name} {args} {kwargs}")
+        # wx.LogDebug(f"_Image(): {self.pil_image} {name} {args} {kwargs}")
         Op = self.pil_image.__getattribute__(name)
         result = Op(*args, **kwargs)
-        # print(result)
+        # wx.LogDebug(result)
         if type(result) is PIL.Image.Image:
             return Image(result)
         elif result is None and name in ['show']:
@@ -85,7 +86,7 @@ class Image():
 
     def regions(self, test):
         pixel = self.pil_image.load()
-        print("&&&&&&&&&&&&&&&&&&&&&", self.pil_image.size)
+        wx.LogDebug("&&&&&&&&&&&&&&&&&&&&&", self.pil_image.size)
         xs, ys = map(range, self.pil_image.size)
         pixels = set(xy for xy in product(xs, ys) if test(pixel[xy]))
         while pixels:
@@ -108,17 +109,17 @@ class Image():
     ###########################################################################
 
     def skew(self):
-        print(f'Skew: {self._skew}, BBox: {self._bbox}')
+        wx.LogDebug(f'Skew: {self._skew}, BBox: {self._bbox}')
         if self._skew is None:
             self._skew, self._bbox = self.get_skew_and_bbox()
-            print(f'Skew: {self._skew}, BBox: {self._bbox}')
+            wx.LogDebug(f'Skew: {self._skew}, BBox: {self._bbox}')
         return self._skew
 
     def bbox(self):
-        print(f'BBox: {self._bbox}, Skew: {self._skew}')
+        wx.LogDebug(f'BBox: {self._bbox}, Skew: {self._skew}')
         if self._bbox is None:
             self._skew, self._bbox = self.get_skew_and_bbox()
-            print(f'Skew: {self._skew}, BBox: {self._bbox}')
+            wx.LogDebug(f'Skew: {self._skew}, BBox: {self._bbox}')
         return self._bbox
 
     def get_skew_and_bbox(self, minimum=-45, maximum=45, step=1):
@@ -131,7 +132,7 @@ class Image():
         # for region in regions:
         #     if region.bigger_than(5):
         #         draw.rectangle(region.bbox(), outline=(255, 0, 0))
-        #         print(region.bbox())
+        #         wx.LogDebug(region.bbox())
         # image.show()
         # return
 
@@ -144,11 +145,11 @@ class Image():
         if orig_image.getbbox():
             left, upper, right, lower = orig_image.getbbox()
         else:
-            print('Got None for bbox -- returning 0 skew and full image size')
+            wx.LogDebug('Got None for bbox -- returning 0 skew and full image size')
             return 0, (0, 0, orig_image.width, orig_image.height)
         prev_area = (lower-upper)*(right-left)
         equal_count = 0
-        # print(min, guess, max, prev_area, lower, upper, right, left)
+        # wx.LogDebug(min, guess, max, prev_area, lower, upper, right, left)
         while minimum <= guess <= maximum:
             guess += step*dir
             image = orig_image.rotate(guess)
@@ -160,13 +161,13 @@ class Image():
             if bbox:
                 area = (bbox[3]-bbox[1])*(bbox[2]-bbox[0])
             else:
-                print('Bbox went away -- setting area to entire image')
+                wx.LogDebug('Bbox went away -- setting area to entire image')
                 area = orig_image.width * orig_image.height
-            # print(min, guess, max, area, prev_area, lower, upper, right, left)
+            # wx.LogDebug(min, guess, max, area, prev_area, lower, upper, right, left)
             if area > prev_area:
                 if equal_count and bbox:
                     angle = guess - dir*step*equal_count/2
-                    # print(f'################################################ {self.size}')
+                    # wx.LogDebug(f'################################################ {self.size}')
                     bbox = [i * max(self.size) / 400 for i in bbox]
                     return angle, bbox
                 dir *= -1
@@ -174,7 +175,7 @@ class Image():
             elif area == prev_area:
                 equal_count += 1
             prev_area = area
-        print(f'No skew ({minimum}, {maximum}) is better than the original')
+        wx.LogDebug(f'No skew ({minimum}, {maximum}) is better than the original')
         return 0, orig_image.getbbox()
 
     def deskew(self, minimum=-45, maximum=45, step=1):

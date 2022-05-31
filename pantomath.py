@@ -169,7 +169,7 @@ class MainFrame(wx.Frame):
         self.scan_hardware_duplex.Enable(state)
         self.scan_one_from_flatbed.Enable(state)
         self.scan_multiple_from_flatbed.Enable(state)
-        # print(self.scanner.device.__dict__)
+        # wx.LogDebug(self.scanner.device.__dict__)
 
     def OnImportFile(self, event):
         filepath = self.ChooseFile()
@@ -190,12 +190,12 @@ class MainFrame(wx.Frame):
     #     Image(image).save(raw, lossless=True)
     #
     #     image = Image(image).deskew()
-    #     print(f"BBox: {image.bbox()}")
+    #     wx.LogDebug(f"BBox: {image.bbox()}")
     #     from PIL import ImageDraw, ImageFilter
     #     draw = ImageDraw.Draw(image.pil_image)
     #     draw.rectangle(image.bbox(), outline=(255, 0, 0))
     #     image.show()
-    #     print(f"Size: {image.size}")
+    #     wx.LogDebug(f"Size: {image.size}")
     #     image = image.pil_image.crop(image.bbox())
     #     image = image.filter(ImageFilter.MinFilter())
     #     image.show()

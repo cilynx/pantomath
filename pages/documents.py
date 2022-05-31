@@ -30,12 +30,12 @@ class Documents(wx.Panel):
         old = event.GetOldSelection()
         new = event.GetSelection()
         sel = self.notebook.GetSelection()
-        print('OnPageChanged,  old:%d, new:%d, sel:%d\n' % (old, new, sel))
+        wx.LogDebug('OnPageChanged,  old:%d, new:%d, sel:%d\n' % (old, new, sel))
         event.Skip()
 
     def OnPageChanging(self, event):
         old = event.GetOldSelection()
         new = event.GetSelection()
         sel = self.notebook.GetSelection()
-        print('OnPageChanging, old:%d, new:%d, sel:%d\n' % (old, new, sel))
+        wx.LogDebug('OnPageChanging, old:%d, new:%d, sel:%d\n' % (old, new, sel))
         event.Skip()
