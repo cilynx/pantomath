@@ -88,7 +88,8 @@ class Word(Placeable):
         # Jan(uary) 1, 1970
         # 2 or 4-digit year?
         if match := re.search(r'(\d{2,4})', self.text):
-            wx.LogDebug(f'Could be a year: {match.group(1)}')
+            year = match.group(1)
+            wx.LogDebug(f'Could be a year: {year}')
             # 1 or 2-digit day followed by comma?
             if pw := self.prev:
                 match = re.search(r'(\d{1,2}),', pw.text)
@@ -100,6 +101,7 @@ class Word(Placeable):
                         if re.search(months, ppw.text, re.IGNORECASE):
                             wx.LogDebug('yup')
                             self.type = 'year'
+                            self.text = year
                             ppw.type = 'month'
                             pw.type = 'day'
                             return True
