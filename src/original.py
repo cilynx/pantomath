@@ -24,7 +24,7 @@ class Original():
         elif isinstance(pages[0], Image):
             self.pages = pages
         else:
-            if len(pages) == 1 and pages[0].is_animated:
+            if len(pages) == 1 and getattr(pages[0], 'is_animated', False):
                 pil_images = []
                 for frame in ImageSequence.Iterator(pages[0]):
                     image = PILImage.new("RGBA", frame.size)
