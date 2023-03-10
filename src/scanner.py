@@ -126,7 +126,9 @@ class Scanner():
         if pages:
             if self.pages:
                 self.pages = [j for i in zip(self.pages, reversed(pages)) for j in i]
+                self.PushStatusText("Processing scanned images")
                 self.frame.library.import_images(self.pages)
+                self.PopStatusText()
                 self.pages = []
                 self.PopStatusText()
             else:
@@ -182,7 +184,9 @@ class Scanner():
             except sane._sane.error as e:
                 wx.LogVerbose(repr(e))
         self.PopStatusText()
+        self.PushStatusText("Processing scanned images")
         self.frame.library.import_image(image)
+        self.PopStatusText()
 
     def scan_multiple_from_flatbed(self, event=None):
         self.PushStatusText("Scanning multiple pages from flatbed.")
@@ -200,7 +204,9 @@ class Scanner():
             threading.Thread(target=self._scan_one_of_multiple).start()
         else:
             self.PopStatusText()
+            self.PushStatusText("Processing scanned images")
             self.frame.library.import_images(self.pages)
+            self.PopStatusText()
             self.pages = []
 
     def _scan_one_of_multiple(self, event=None):
