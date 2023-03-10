@@ -150,6 +150,8 @@ class Scanner():
         source = self.frame.config.Read('/Scan/Source', 'ADF')
         wx.LogDebug(f'Scan Source: {source}')
         self.device.source = 'ADF' if source == 'Manual Duplex' else source
+        self.device.mode = self.frame.config.Read('/Scan/Mode')
+        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.br_x = self.device.opt['br_x'].constraint[1]  # X_max
         self.device.br_y = self.device.opt['br_y'].constraint[1]  # Y_max
         # wx.LogDebug(self.device.__dict__)
@@ -167,9 +169,9 @@ class Scanner():
         return thread
 
     def _scan_one_from_flatbed(self):
-        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.source = 'Flatbed'
-        self.device.mode = 'color'
+        self.device.mode = self.frame.config.Read('/Scan/Mode')
+        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         while True:
             try:
                 wx.LogDebug(self.device.source)
@@ -204,5 +206,7 @@ class Scanner():
     def _scan_one_of_multiple(self, event=None):
         wx.LogDebug('Scanner._scan_multiple_from_flatbed(): START')
         self.device.source = 'Flatbed'
+        self.device.mode = self.frame.config.Read('/Scan/Mode')
+        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         page = self.scan()
         wx.CallAfter(self.receive_one_of_multiple, page)
