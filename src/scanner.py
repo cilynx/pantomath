@@ -198,23 +198,3 @@ class Scanner():
         self.device.source = 'Flatbed'
         page = self.scan()
         wx.CallAfter(self.receive_one_of_multiple, page)
-        # images = []
-        # while True:
-        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Inside loop')
-        #     images.append(self.scan())
-        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): After scan')
-        #     dialog = wx.MessageDialog(self.frame, "", f"Scanned Page {len(images)}", wx.YES_NO)
-        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Created dialog')
-        #     dialog.SetYesNoLabels("Scan Another Page", "All Done")
-        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Set labels')
-        #     result = dialog.ShowModal()
-        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Showed dialog')
-        #     if result != wx.ID_YES:
-        #         break
-        # wx.LogDebug('Scanner._scan_multiple_from_flatbed(): After loop')
-        # if images:
-        #     wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Saving image(s)')
-        #     images[0].save('out.webp', lossless=True, save_all=True, append_images=images[1:])
-        # wx.LogDebug('Scanner._scan_multiple_from_flatbed(): Popping status')
-        # self.PopStatusText()
-        # wx.LogDebug('Scanner._scan_multiple_from_flatbed(): END')

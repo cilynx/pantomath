@@ -24,5 +24,4 @@ class ConfMenu(wx.Menu):
 
         for item in args:
             if self.frame.config.Read(f"{self.prefix}/{kwargs['confKey']}") == item['confValue']:
-                wx.LogDebug(f"Read {self.prefix}/{kwargs['confKey']}: {item['confValue']}")
                 self.Check(item['obj'].GetId(), True)
