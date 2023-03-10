@@ -170,7 +170,15 @@ class Scanner():
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         self.device.source = 'Flatbed'
         self.device.mode = 'color'
-        image = self.scan()
+        while True:
+            try:
+                wx.LogDebug(self.device.source)
+                wx.LogDebug(self.device.mode)
+                wx.LogDebug(str(self.device.resolution))
+                image = self.scan()
+                break
+            except sane._sane.error as e:
+                wx.LogVerbose(repr(e))
         self.PopStatusText()
         self.frame.library.import_image(image)
 
