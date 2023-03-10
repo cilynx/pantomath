@@ -12,6 +12,8 @@ class Scanner():
 
     def __init__(self, frame):
         self.frame = frame
+        self.options = {}
+        self.modeMenu = ConfMenu(self.frame, "/Scan")
         self.PushStatusText("Initializing scanner...")
         threading.Thread(target=self._init_scanner, daemon=True).start()
 
@@ -84,6 +86,10 @@ class Scanner():
                     self.device = sane.open(self.devname)
                     wx.CallAfter(self.PushStatusText, self.model + " Ready")
                     wx.LogDebug('Enabling Scan UI')
+                    for option in self.device.get_options():
+                        self.options[option[1]] = option[8]
+                    modeOptions = [{'shortHelp': mode, 'longHelp': mode, 'confValue': mode} for mode in self.options['mode']]
+                    self.modeMenu.AppendRadioSet(*modeOptions, confKey="Mode")
                     self.frame.EnableScanUI()
                 else:
                     wx.LogDebug('No scanner found')
@@ -141,8 +147,6 @@ class Scanner():
                 threading.Thread(target=self._scan_adf).start()
 
     def _scan_adf(self):
-        self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
-        self.device.mode = 'color'
         source = self.frame.config.Read('/Scan/Source', 'ADF')
         wx.LogDebug(f'Scan Source: {source}')
         self.device.source = 'ADF' if source == 'Manual Duplex' else source
