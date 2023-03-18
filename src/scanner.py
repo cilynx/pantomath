@@ -33,6 +33,10 @@ class Scanner():
     def PopStatusText(self):
         return self.frame.PopStatusText(1)
 
+    def ReplaceStatusText(self, text):
+        self.PopStatusText()
+        self.PushStatusText(text)
+
     ###########################################################################
     # Config Menu
     ###########################################################################
@@ -107,7 +111,7 @@ class Scanner():
         return thread
 
     def scan_manual_duplex(self, event=None):
-        self.PushStatusText("Manually duplexing pages from ADF.")
+        self.PushStatusText("Scanning fronts from ADF.")
         self.frame.config.Write('/Scan/Source', 'Manual Duplex')
         self.pages = []
         thread = threading.Thread(target=self._scan_adf)
@@ -134,10 +138,12 @@ class Scanner():
             else:
                 self.pages.extend(pages)
                 if self.frame.config.Read('/Scan/Source', '') == 'Manual Duplex':
+                    self.ReplaceStatusText("Waiting for stack flip.")
                     wx.MessageDialog(self.frame,
                                      '',
                                      'Load the stack face-down back into the ADF',
                                      wx.OK).ShowModal()
+                    self.ReplaceStatusText("Scanning backs from ADF.")
                     threading.Thread(target=self._scan_adf).start()
                 else:
                     self.frame.library.import_images(self.pages)
@@ -183,8 +189,7 @@ class Scanner():
                 break
             except sane._sane.error as e:
                 wx.LogVerbose(repr(e))
-        self.PopStatusText()
-        self.PushStatusText("Processing scanned images")
+        self.ReplaceStatusText("Processing scanned images")
         self.frame.library.import_image(image)
         self.PopStatusText()
 
@@ -203,8 +208,7 @@ class Scanner():
         if result == wx.ID_YES:
             threading.Thread(target=self._scan_one_of_multiple).start()
         else:
-            self.PopStatusText()
-            self.PushStatusText("Processing scanned images")
+            self.ReplaceStatusText("Processing scanned images")
             self.frame.library.import_images(self.pages)
             self.PopStatusText()
             self.pages = []
