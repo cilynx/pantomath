@@ -194,7 +194,7 @@ class Scanner():
         self.PopStatusText()
 
     def scan_multiple_from_flatbed(self, event=None):
-        self.PushStatusText("Scanning multiple pages from flatbed.")
+        self.PushStatusText("Scanning Page 1 from flatbed.")
         self.pages = []
         thread = threading.Thread(target=self._scan_one_of_multiple)
         thread.start()
@@ -206,6 +206,7 @@ class Scanner():
         dialog.SetYesNoLabels("Scan Another Page", "All Done")
         result = dialog.ShowModal()
         if result == wx.ID_YES:
+            self.ReplaceStatusText(f"Scanning page {len(self.pages)+1} from flatbed")
             threading.Thread(target=self._scan_one_of_multiple).start()
         else:
             self.ReplaceStatusText("Processing scanned images")
