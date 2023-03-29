@@ -51,6 +51,7 @@ class Word(Placeable):
 
         # The DMV is a fan of 00/00/2022 when they don't know the details
         if re.findall(r'/00/', self.text):
+            wx.LogDebug(f"Found a fake DMV date that isn't a date: {self.text}")
             return False
 
         # m[m]/d[d]/yy[yy]
@@ -61,20 +62,22 @@ class Word(Placeable):
                 if newText != self.text:
                     wx.LogDebug(f'Date has extra garbage.  Converting {self.text} to {newText}')
                     self.text = newText
+                wx.LogDebug(f"Found a m[m]/d[d]/yy[yy] date: {self.text}")
                 return True
             else:
-                wx.LogDebug(f"Date isn't a date. Possibly bad OCR: {self.text}")
+                wx.LogDebug(f"Looks like a date, but isn't a date. Possibly bad OCR: {self.text}")
                 return False
 
-        # This is overly greedy -- every 4-digit number is assumed
-        # to be a year with "today" as the month and day
-        #
-        # try:
-        #     dateutil.parser.parse(self.text)
-        #     self.type = 'date'
-        #     return True
-        # except:
-        #     return False
+
+        # d[d]-month-yy[yy]
+        months = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
+        match = re.search(r'(\d{1,2})-([a-zA-Z]+)-(\d{2,4})', self.text)
+        if match:
+            # wx.LogDebug(f"{self.text} is a match")
+            if 0 < int(match.group(1)) < 32:
+                if re.search(months, match.group(2), re.IGNORECASE):
+                    wx.LogDebug(f"Found a d[d]-month-yy[yy] date: {self.text}")
+                    return True
 
     @property
     def is_year(self):
@@ -89,23 +92,24 @@ class Word(Placeable):
         # 2 or 4-digit year?
         if match := re.search(r'(\d{2,4})', self.text):
             year = match.group(1)
-            wx.LogDebug(f'Could be a year: {year}')
+            # wx.LogDebug(f'Could be a year: {year}')
             # 1 or 2-digit day followed by comma?
             if pw := self.prev:
                 match = re.search(r'(\d{1,2}),', pw.text)
                 if match and 0 < int(match.group(1)) < 32:
-                    wx.LogDebug(f'Could be a day-of-month: {match.group(1)}')
+                    # wx.LogDebug(f'Could be a day-of-month: {match.group(1)}')
                     # Month?
                     if ppw := pw.prev:
-                        wx.LogDebug(f'Testing for monthness: {ppw.text}...')
+                        # wx.LogDebug(f'Testing for monthness: {ppw.text}...')
                         if re.search(months, ppw.text, re.IGNORECASE):
                             wx.LogDebug('yup')
                             self.type = 'year'
                             self.text = year
                             ppw.type = 'month'
                             pw.type = 'day'
+                            wx.LogDebug(f"Found a multi-token date: {ppw.text} {pw.text}, {self.text}")
                             return True
-                        wx.LogDebug('nope')
+                        # wx.LogDebug('nope')
         return False
 
     ###########################################################################
