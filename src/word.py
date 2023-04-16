@@ -4,6 +4,11 @@ import re
 
 from .placeable import Placeable
 
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+END = "\033[0m"
 
 class Word(Placeable):
     def __init__(self, line, left, top, width, height, confidence, text):
@@ -88,28 +93,30 @@ class Word(Placeable):
 
         months = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 
-        # Jan(uary) 1, 1970
-        # 2 or 4-digit year?
+        wx.LogDebug(f'{BLUE}Looking for 2 or 4-digit numbers that might be years{END}')
         if match := re.search(r'(\d{2,4})', self.text):
-            year = match.group(1)
-            # wx.LogDebug(f'Could be a year: {year}')
-            # 1 or 2-digit day followed by comma?
+            wx.LogDebug(f'{YELLOW}Could be a year: {match.group(1)}{END}')
             if pw := self.prev:
+                wx.LogDebug(f'{BLUE}Evaluating pw ({END}{pw.text}{BLUE}){END}')
+                wx.LogDebug(f'{BLUE}Checking if pw looks like a day of month{END}')
                 match = re.search(r'(\d{1,2}),', pw.text)
                 if match and 0 < int(match.group(1)) < 32:
-                    # wx.LogDebug(f'Could be a day-of-month: {match.group(1)}')
-                    # Month?
+                    wx.LogDebug(f'{YELLOW}Could be a day of month: {match.group(1)}{END}')
+                    wx.LogDebug(f'{BLUE}Checking if ppw look like a month{END}')
                     if ppw := pw.prev:
-                        # wx.LogDebug(f'Testing for monthness: {ppw.text}...')
+                        wx.LogDebug(f'{BLUE}Testing for monthness: {ppw.text}{END}')
                         if re.search(months, ppw.text, re.IGNORECASE):
-                            wx.LogDebug('yup')
                             self.type = 'year'
-                            self.text = year
                             ppw.type = 'month'
                             pw.type = 'day'
-                            wx.LogDebug(f"Found a multi-token date: {ppw.text} {pw.text}, {self.text}")
+                            wx.LogDebug(f'{GREEN}Found a three-token date: {ppw.text} {pw.text} {self.text}{END}')
                             return True
-                        # wx.LogDebug('nope')
+                wx.LogDebug(f'{BLUE}Checking if pw is day-month in a single token{END}')
+                if day_month := re.search(fr'(\d{{1,2}})-{months}', pw.text, re.IGNORECASE):
+                    self.type = 'year'
+                    pw.type = 'day-month'
+                    wx.LogDebug(f'{GREEN}Found a two-token date: {pw.text} {self.text}{END}')
+                    return True
         return False
 
     ###########################################################################

@@ -242,11 +242,16 @@ class Document():
     @property
     def dates(self):
         if not self._dates:
+            wx.LogDebug("Looking for dates")
             for word in self.words:
                 if word.is_date:
                     self._dates.append(Date([word]))
                 if word.is_year:
-                    self._dates.append(Date([word.prev.prev, word.prev, word]))
+                    if word.prev.type == 'day' and word.prev.prev.type == 'month':
+                        self._dates.append(Date([word.prev.prev, word.prev, word]))
+                    if word.prev.type == 'day-month':
+                        self._dates.append(Date([word.prev, word]))
+            wx.LogDebug("Done looking for dates")
         return self._dates
 
     @property
