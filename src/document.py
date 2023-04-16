@@ -15,6 +15,12 @@ from .date import Date
 from .image import Image
 from .original import Original
 
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+BOLD = "\033[1m"
+END = "\033[0m"
 
 class Document():
 
@@ -122,6 +128,7 @@ class Document():
 
     @property
     def blocks(self):
+        wx.LogDebug(f'{RED}Document has {len(self.pages)} pages{END}')
         return [block for page in self.pages for block in page.blocks]
 
     @property
@@ -158,7 +165,8 @@ class Document():
                           save_all=True,
                           append_images=pages[1:])
             self._processed = PIL.Image.open(f'{self.id}.tiff')
-            os.remove(f'{self.id}.tiff')
+            wx.LogDebug(f'{GREEN}Saving{END} {BOLD}{self.id}.tiff{END}')
+#            os.remove(f'{self.id}.tiff')
         wx.LogDebug(f'Document.processed(): _processed after: {self._processed}')
         wx.LogDebug('Document.processed(END)')
         return self._processed
@@ -175,8 +183,10 @@ class Document():
             WORD = 5
 
             wx.LogDebug('pages(): Loading Tesseract Data')
-            data = pytesseract.image_to_data(self.processed,
+            self.processed # Need to run this to generate the file below.  Need to fix this.
+            data = pytesseract.image_to_data(f'{self.id}.tiff',
                                              output_type=Output.DICT)
+            os.remove(f'{self.id}.tiff')
             wx.LogDebug('pages(): Done with image_to_data()')
             self._json['data'] = data
 
@@ -187,6 +197,7 @@ class Document():
             i = 0
             wx.LogDebug('pages(): Parsing Levels')
             for level in data['level']:
+                # wx.LogDebug(f'{GREEN}Level:{END} {BOLD}{level}{END}')
                 if level == PAGE:
                     page = Page(self,
                                 data['left'][i],

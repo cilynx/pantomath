@@ -8,6 +8,7 @@ RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
+BOLD = "\033[1m"
 END = "\033[0m"
 
 class Word(Placeable):
@@ -54,23 +55,25 @@ class Word(Placeable):
         elif self.type:
             return False
 
-        # The DMV is a fan of 00/00/2022 when they don't know the details
+        # The DMV is a fan of 00/00/YYYY when they don't know the details
         if re.findall(r'/00/', self.text):
-            wx.LogDebug(f"Found a fake DMV date that isn't a date: {self.text}")
+            wx.LogDebug(f"{RED}Found a fake DMV date that isn't a date: {self.text}{END}")
             return False
 
         # m[m]/d[d]/yy[yy]
-        match = re.search(r'^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$', self.text)
+        wx.LogDebug(f'{BLUE}Checking if{END} {BOLD}{self.text}{END} {BLUE}is a m[m]/d[d]/yy[yy] date{END}')
+        match = re.search(r'^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$', self.text)
         if match:
+            wx.LogDebug(f'{BOLD}{self.text}{END} {YELLOW}looks a lot like m[m]/d[d]/yy[yy].  Checking ranges to be sure{END}')
             if 0 < int(match.group(1)) < 13 and 0 < int(match.group(2)) < 32:
                 newText = '/'.join(match.groups())
                 if newText != self.text:
-                    wx.LogDebug(f'Date has extra garbage.  Converting {self.text} to {newText}')
+                    wx.LogDebug(f'{YELLOW}Date has extra garbage.  Converting{END} {self.text} {YELLOW}to{END} {newText}')
                     self.text = newText
-                wx.LogDebug(f"Found a m[m]/d[d]/yy[yy] date: {self.text}")
+                wx.LogDebug(f'{GREEN}Found a m[m]/d[d]/yy[yy] date:{END} {BOLD}{self.text}{END}')
                 return True
             else:
-                wx.LogDebug(f"Looks like a date, but isn't a date. Possibly bad OCR: {self.text}")
+                wx.LogDebug(f"{RED}Looks like a date, but isn't a date. Possibly bad OCR:{END} {BOLD}{self.text}{END}")
                 return False
 
 
@@ -93,18 +96,18 @@ class Word(Placeable):
 
         months = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 
-        wx.LogDebug(f'{BLUE}Looking for 2 or 4-digit numbers that might be years{END}')
+        wx.LogDebug(f'{BLUE}Checking if{END} {BOLD}{self.text}{END} {BLUE}is a 2 or 4-digit numbers that might be a year{END}')
         if match := re.search(r'(\d{2,4})', self.text):
             wx.LogDebug(f'{YELLOW}Could be a year: {match.group(1)}{END}')
             if pw := self.prev:
-                wx.LogDebug(f'{BLUE}Evaluating pw ({END}{pw.text}{BLUE}){END}')
+                wx.LogDebug(f'{BLUE}Evaluating pw ({END}{BOLD}{pw.text}{END}{BLUE}){END}')
                 wx.LogDebug(f'{BLUE}Checking if pw looks like a day of month{END}')
                 match = re.search(r'(\d{1,2}),', pw.text)
                 if match and 0 < int(match.group(1)) < 32:
                     wx.LogDebug(f'{YELLOW}Could be a day of month: {match.group(1)}{END}')
                     wx.LogDebug(f'{BLUE}Checking if ppw look like a month{END}')
                     if ppw := pw.prev:
-                        wx.LogDebug(f'{BLUE}Testing for monthness: {ppw.text}{END}')
+                        wx.LogDebug(f'{BLUE}Testing for monthness:{END} {BOLD}{ppw.text}{END}')
                         if re.search(months, ppw.text, re.IGNORECASE):
                             self.type = 'year'
                             ppw.type = 'month'
@@ -115,7 +118,7 @@ class Word(Placeable):
                 if day_month := re.search(fr'(\d{{1,2}})-{months}', pw.text, re.IGNORECASE):
                     self.type = 'year'
                     pw.type = 'day-month'
-                    wx.LogDebug(f'{GREEN}Found a two-token date: {pw.text} {self.text}{END}')
+                    wx.LogDebug(f'{GREEN}Found a two-token date:{END} {BOLD}{pw.text} {self.text}{END}')
                     return True
         return False
 
