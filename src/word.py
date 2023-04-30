@@ -98,6 +98,7 @@ class Word(Placeable):
 
         wx.LogDebug(f'{BLUE}Checking if{END} {BOLD}{self.text}{END} {BLUE}is a 2 or 4-digit numbers that might be a year{END}')
         if match := re.search(r'(\d{2,4})', self.text):
+            clean_year = match.group(1)
             wx.LogDebug(f'{YELLOW}Could be a year: {match.group(1)}{END}')
             if pw := self.prev:
                 wx.LogDebug(f'{BLUE}Evaluating pw ({END}{BOLD}{pw.text}{END}{BLUE}){END}')
@@ -109,6 +110,7 @@ class Word(Placeable):
                     if ppw := pw.prev:
                         wx.LogDebug(f'{BLUE}Testing for monthness:{END} {BOLD}{ppw.text}{END}')
                         if re.search(months, ppw.text, re.IGNORECASE):
+                            self.text = clean_year
                             self.type = 'year'
                             ppw.type = 'month'
                             pw.type = 'day'
