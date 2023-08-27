@@ -97,7 +97,7 @@ class Word(Placeable):
         months = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 
         wx.LogDebug(f'{BLUE}Checking if{END} {BOLD}{self.text}{END} {BLUE}is a 2 or 4-digit numbers that might be a year{END}')
-        if match := re.search(r'(\d{2,4})', self.text):
+        if match := re.search(r'(^\d{2,4}$)', self.text):
             clean_year = match.group(1)
             wx.LogDebug(f'{YELLOW}Could be a year: {match.group(1)}{END}')
             if pw := self.prev:
