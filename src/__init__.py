@@ -3,3 +3,4 @@ from .library import Library
 from .scanner import Scanner
 from .config import Config
 from .image import Image
+from .vehicle import VehiclePage

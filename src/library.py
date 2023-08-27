@@ -12,7 +12,7 @@ class Library():
         wx.LogDebug(f'Initializing Library at {dir}')
         self.dir = dir
         self.documents = []
-        for json_path in glob.glob(f'{dir}/*/*/*/*.json'):
+        for json_path in glob.glob(f'{dir}/*/*/*/props.json'):
             doc = Document.from_json(json_path)
             if doc.md5 in self.md5s:
                 dialog = wx.MessageDialog(None,

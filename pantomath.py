@@ -5,7 +5,7 @@ import os
 
 from datetime import datetime
 
-from src import Scanner, Config, Library
+from src import Scanner, Config, Library, VehiclePage
 from pages import Documents, Organizations
 
 
@@ -29,6 +29,7 @@ class MainFrame(wx.Frame):
 
         notebook.AddPage(docsPage, 'Documents')
         notebook.AddPage(orgsPage, 'Organizations')
+        notebook.AddPage(VehiclePage(notebook), 'Vehicles')
 
         sizer = wx.BoxSizer()
         sizer.Add(notebook, 1, wx.EXPAND)
