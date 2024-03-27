@@ -1,6 +1,7 @@
 import wx
 import re
 # import dateutil.parser
+from thefuzz import fuzz
 
 from .placeable import Placeable
 
@@ -109,9 +110,11 @@ class Word(Placeable):
                     wx.LogDebug(f'{BLUE}Checking if ppw look like a month{END}')
                     if ppw := pw.prev:
                         wx.LogDebug(f'{BLUE}Testing for monthness:{END} {BOLD}{ppw.text}{END}')
-                        if re.search(months, ppw.text, re.IGNORECASE):
+                        if match := re.search(r'({months})', ppw.text, re.IGNORECASE):
+                            clean_month = match.group(1)
                             self.text = clean_year
                             self.type = 'year'
+                            ppw.text = clean_month
                             ppw.type = 'month'
                             pw.type = 'day'
                             wx.LogDebug(f'{GREEN}Found a three-token date: {ppw.text} {pw.text} {self.text}{END}')
@@ -139,3 +142,9 @@ class Word(Placeable):
             self.text = f'\n{self.text}'
             return True
         return False
+
+    def fuzz_ratio(self, comp):
+        return fuzz.ratio(self.text, comp)
+
+    def looks_like(self, comp, min_ratio=75):
+        return self.fuzz_ratio(comp) >= min_ratio

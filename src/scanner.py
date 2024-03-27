@@ -102,6 +102,7 @@ class Scanner():
                     wx.CallAfter(self.PushStatusText, self.frame.config.Read('/Scan/Device') + " Ready")
                     wx.LogDebug('Enabling Scan UI')
                     for option in self.device.get_options():
+                        wx.LogDebug(f'Option: {option}')
                         self.options[option[1]] = option[8]
                     self.device.close()
                     modeOptions = [{'shortHelp': mode, 'longHelp': mode, 'confValue': mode} for mode in self.options['mode']]

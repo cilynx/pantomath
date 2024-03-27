@@ -24,8 +24,9 @@ END = "\033[0m"
 
 class Document():
 
-    def __init__(self, id=None, pages=None):
-        self.id = id
+    def __init__(self, library, pages=None):
+        self.library = library
+        self.id = library.new_id()
 
         self._processed = None
         self._json_path = None
@@ -250,6 +251,7 @@ class Document():
         wx.LogDebug('pages(END)')
         return self._pages
 
+#TODO: Refactor this mess as it's no longer just dates
     @property
     def dates(self):
         if not self._dates:
@@ -262,6 +264,13 @@ class Document():
                         self._dates.append(Date([word.prev.prev, word.prev, word]))
                     if word.prev.type == 'day-month':
                         self._dates.append(Date([word.prev, word]))
+                for vehicle in self.library.vehicles:
+                    if word.looks_like(vehicle.vin):
+                        wx.MessageBox(f'{word.text} looks a lot like {vehicle.vin}', f'{vehicle} Detected!', wx.OK | wx.ICON_INFORMATION)
+                    elif hasattr(vehicle, 'plates'):
+                        for plate in vehicle.plates:
+                            if word.looks_like(plate.number):
+                                wx.MessageBox(f'{word.text} looks a lot like {plate.number}', f'{vehicle} Detected!', wx.OK | wx.ICON_INFORMATION)
             wx.LogDebug("Done looking for dates")
         return self._dates
 

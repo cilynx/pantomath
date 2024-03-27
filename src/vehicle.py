@@ -1,7 +1,6 @@
 import wx
 import os
 import json
-import wx.lib.agw.thumbnailctrl as tc
 
 class Vehicle():
     """
@@ -14,7 +13,30 @@ class Vehicle():
         with open(os.path.join(path, 'props.json'), 'r') as json_file:
             data = json.load(json_file)
             for key, value in data.items():
+                if key == 'plates':
+                    plates = []
+                    for plate in value:
+                        plates.append(Plate(self, plate['state'], plate['number']))
+                    value = plates
                 setattr(self, key, value)
+
+    def __repr__(self):
+        return f'{self.year} {self.make} {self.model}'
+
+    @property
+    def image_path(self):
+        return os.path.join(self.path, 'image.png')
+
+
+class Plate():
+    def __init__(self, vehicle, state, number):
+        self.vehicle = vehicle
+        self.state = state
+        self.number = number
+
+    def __repr__(self):
+        return f'{self.state} {self.number}'
+
 
 class VehiclePage(wx.Panel):
     """
@@ -25,14 +47,10 @@ class VehiclePage(wx.Panel):
         super().__init__(parent)
         self.parent = parent
         self.library = parent.Parent.Parent.library
-        self.vehicles = []
-
-        for entry in os.scandir(os.path.join(self.library.dir, 'vehicles')):
-            self.vehicles.append(Vehicle(entry.path))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        sizer.Add(VehicleList(self, self.vehicles), 1, wx.EXPAND)
+        sizer.Add(VehicleList(self, self.library.vehicles), 1, wx.EXPAND)
 
         self.SetSizer(sizer)
 
@@ -54,7 +72,7 @@ class VehicleList(wx.ListCtrl):
 
         # Add the vehicles to the list
         for vehicle in vehicles:
-            img = wx.Image(os.path.join(vehicle.path, 'image.png'), wx.BITMAP_TYPE_ANY).Scale(400, 225)
+            img = wx.Image(vehicle.image_path, wx.BITMAP_TYPE_ANY).Scale(400, 225)
             img_idx = self.image_list.Add(wx.Bitmap(img))
 
             index = self.InsertItem(self.GetItemCount(), "", img_idx)

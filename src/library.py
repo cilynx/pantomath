@@ -1,16 +1,18 @@
 import wx
+import os
 import PIL
 import glob
 import uuid
 import filetype
 
 from .document import Document
-
+from .vehicle import Vehicle
 
 class Library():
     def __init__(self, dir):
         wx.LogDebug(f'Initializing Library at {dir}')
         self.dir = dir
+
         self.documents = []
         for json_path in glob.glob(f'{dir}/*/*/*/props.json'):
             doc = Document.from_json(json_path)
@@ -26,6 +28,12 @@ class Library():
                 wx.LogDebug(f"Skipping {doc.json_path}")
             else:
                 self.documents.append(doc)
+
+        self.vehicles = []
+        for entry in os.scandir(os.path.join(self.dir, 'vehicles')):
+            if os.path.exists(os.path.join(entry.path, 'props.json')):
+                if os.path.exists(os.path.join(entry.path, 'image.png')):
+                    self.vehicles.append(Vehicle(entry.path))
 
     def doc_from_md5(self, md5):
         docs = [doc for doc in self.documents if doc.md5 == md5]
@@ -60,19 +68,19 @@ class Library():
 
     def import_image(self, pil_image):
         wx.LogDebug('Importing Image')
-        doc = Document(self.new_id(), [pil_image])
+        doc = Document(self, [pil_image])
         doc.write_files(self.dir)
         # TODO: Return whether image was successfully imported or not
         return True
 
     def import_images(self, pil_images):
         wx.LogDebug('Library.import_images()')
-        doc = Document(self.new_id(), pil_images)
+        doc = Document(self, pil_images)
         doc.write_files(self.dir)
 
     def import_pdf(self, src):
         wx.LogDebug('Importing PDF to Library')
-        doc = Document(self.new_id(), src)
+        doc = Document(self, src)
         doc.write_files(self.dir)
         # date = datetime.now()
         # with open(src, 'rb') as file:
