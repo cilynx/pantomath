@@ -13,6 +13,7 @@ class Scanner():
     def __init__(self, frame):
         self.frame = frame
         self.options = {}
+        self.deviceMenu = ConfMenu(self.frame, "/Scan")
         self.modeMenu = ConfMenu(self.frame, "/Scan")
         self.PushStatusText("Initializing scanner...")
         threading.Thread(target=self._init_scanner, daemon=True).start()
@@ -86,12 +87,23 @@ class Scanner():
                 devices = sane.get_devices()
                 if devices:
                     wx.LogDebug(repr(devices))
-                    self.devname, self.vendor, self.model, self.type = devices[0]
-                    self.device = sane.open(self.devname)
-                    wx.CallAfter(self.PushStatusText, self.model + " Ready")
+                    scanners = [{'shortHelp': device[2], 'longHelp': device[0], 'confValue': device[0]} for device in devices]
+                    self.deviceMenu.AppendRadioSet(*scanners, confKey="Device")
+
+                    if configured_devname := self.frame.config.Read('/Scan/Device', ''):
+                        for device in devices:
+                            if device[0] == configured_devname:
+                                break
+                        else:
+                            self.frame.config.Write('/Scan/Device', device[0])
+                    else:
+                        self.frame.config.Write('/Scan/Device', devices[0][0])
+                    self.device = sane.open(self.frame.config.Read('/Scan/Device'))
+                    wx.CallAfter(self.PushStatusText, self.frame.config.Read('/Scan/Device') + " Ready")
                     wx.LogDebug('Enabling Scan UI')
                     for option in self.device.get_options():
                         self.options[option[1]] = option[8]
+                    self.device.close()
                     modeOptions = [{'shortHelp': mode, 'longHelp': mode, 'confValue': mode} for mode in self.options['mode']]
                     self.modeMenu.AppendRadioSet(*modeOptions, confKey="Mode")
                     self.frame.EnableScanUI()
@@ -155,6 +167,7 @@ class Scanner():
                 threading.Thread(target=self._scan_adf).start()
 
     def _scan_adf(self):
+        self.device = sane.open(self.frame.config.Read('/Scan/Device'))
         source = self.frame.config.Read('/Scan/Source', 'ADF')
         wx.LogDebug(f'Scan Source: {source}')
         self.device.source = 'ADF' if source == 'Manual Duplex' else source
@@ -165,8 +178,10 @@ class Scanner():
         # wx.LogDebug(self.device.__dict__)
         try:
             pages = list(self.device.multi_scan())
+            self.device.close()
             wx.CallAfter(self.receive_pages_from_adf, pages)
         except sane._sane.error as e:
+            self.device.close()
             wx.LogWarning(repr(e))
             self.PopStatusText()
 
@@ -177,6 +192,7 @@ class Scanner():
         return thread
 
     def _scan_one_from_flatbed(self):
+        self.device = sane.open(self.frame.config.Read('/Scan/Device'))
         self.device.source = 'Flatbed'
         self.device.mode = self.frame.config.Read('/Scan/Mode')
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
@@ -186,8 +202,10 @@ class Scanner():
                 wx.LogDebug(self.device.mode)
                 wx.LogDebug(str(self.device.resolution))
                 image = self.scan()
+                self.device.close()
                 break
             except sane._sane.error as e:
+                self.device.close()
                 wx.LogVerbose(repr(e))
         self.ReplaceStatusText("Processing scanned images")
         self.frame.library.import_image(image)
@@ -216,8 +234,10 @@ class Scanner():
 
     def _scan_one_of_multiple(self, event=None):
         wx.LogDebug('Scanner._scan_multiple_from_flatbed(): START')
+        self.device = sane.open(self.frame.config.Read('/Scan/Device'))
         self.device.source = 'Flatbed'
         self.device.mode = self.frame.config.Read('/Scan/Mode')
         self.device.resolution = int(self.frame.config.Read('/Scan/Resolution'))
         page = self.scan()
+        self.device.close()
         wx.CallAfter(self.receive_one_of_multiple, page)
