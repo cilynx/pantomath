@@ -1,5 +1,6 @@
 import wx
 import re
+import string
 # import dateutil.parser
 from thefuzz import fuzz
 
@@ -17,13 +18,17 @@ class Word(Placeable):
         super().__init__(left, top, width, height)
         self.line = line
         self.confidence = confidence
-        self.text = text
+        self.raw = text
         self.type = None
         self.date = None
 
     ###########################################################################
     # Properties
     ###########################################################################
+
+    @property
+    def text(self):
+        return self.raw.strip(string.punctuation)
 
     @property
     def paragraph(self):
@@ -98,21 +103,17 @@ class Word(Placeable):
         months = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
 
         wx.LogDebug(f'{BLUE}Checking if{END} {BOLD}{self.text}{END} {BLUE}is a 2 or 4-digit numbers that might be a year{END}')
-        if match := re.search(r'(^\d{2,4}$)', self.text):
-            clean_year = match.group(1)
+        if match := re.match(r'(\d{2,4}$)', self.text):
             wx.LogDebug(f'{YELLOW}Could be a year: {match.group(1)}{END}')
             if pw := self.prev:
                 wx.LogDebug(f'{BLUE}Evaluating if pw looks like a day-of-month ({END}{BOLD}{pw.text}{END}{BLUE}){END}')
-                match = re.search(r'(\d{1,2}),', pw.text)
+                match = re.match(r'(\d{1,2})', pw.text)
                 if match and 0 < int(match.group(1)) < 32:
                     wx.LogDebug(f'{YELLOW}Could be a day of month: {match.group(1)}{END}')
                     if ppw := pw.prev:
                         wx.LogDebug(f'{BLUE}Evaluating ppw monthness ({END}{BOLD}{ppw.text}{END}{BLUE}){END}')
                         if match := re.search(months, ppw.text, re.IGNORECASE):
-                            clean_month = match.group(0)
-                            self.text = clean_year
                             self.type = 'year'
-                            ppw.text = clean_month
                             ppw.type = 'month'
                             pw.type = 'day'
                             wx.LogDebug(f'{GREEN}Found a three-token date: {ppw.text} {pw.text} {self.text}{END}')
