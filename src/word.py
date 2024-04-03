@@ -102,16 +102,14 @@ class Word(Placeable):
             clean_year = match.group(1)
             wx.LogDebug(f'{YELLOW}Could be a year: {match.group(1)}{END}')
             if pw := self.prev:
-                wx.LogDebug(f'{BLUE}Evaluating pw ({END}{BOLD}{pw.text}{END}{BLUE}){END}')
-                wx.LogDebug(f'{BLUE}Checking if pw looks like a day of month{END}')
+                wx.LogDebug(f'{BLUE}Evaluating if pw looks like a day-of-month ({END}{BOLD}{pw.text}{END}{BLUE}){END}')
                 match = re.search(r'(\d{1,2}),', pw.text)
                 if match and 0 < int(match.group(1)) < 32:
                     wx.LogDebug(f'{YELLOW}Could be a day of month: {match.group(1)}{END}')
-                    wx.LogDebug(f'{BLUE}Checking if ppw look like a month{END}')
                     if ppw := pw.prev:
-                        wx.LogDebug(f'{BLUE}Testing for monthness:{END} {BOLD}{ppw.text}{END}')
-                        if match := re.search(r'({months})', ppw.text, re.IGNORECASE):
-                            clean_month = match.group(1)
+                        wx.LogDebug(f'{BLUE}Evaluating ppw monthness ({END}{BOLD}{ppw.text}{END}{BLUE}){END}')
+                        if match := re.search(months, ppw.text, re.IGNORECASE):
+                            clean_month = match.group(0)
                             self.text = clean_year
                             self.type = 'year'
                             ppw.text = clean_month
