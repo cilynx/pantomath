@@ -72,10 +72,6 @@ class Word(Placeable):
         if match:
             wx.LogDebug(f'{BOLD}{self.text}{END} {YELLOW}looks a lot like m[m]/d[d]/yy[yy].  Checking ranges to be sure{END}')
             if 0 < int(match.group(1)) < 13 and 0 < int(match.group(2)) < 32:
-                newText = '/'.join(match.groups())
-                if newText != self.text:
-                    wx.LogDebug(f'{YELLOW}Date has extra garbage.  Converting{END} {self.text} {YELLOW}to{END} {newText}')
-                    self.text = newText
                 wx.LogDebug(f'{GREEN}Found a m[m]/d[d]/yy[yy] date:{END} {BOLD}{self.text}{END}')
                 return True
             else:
