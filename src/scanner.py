@@ -107,6 +107,8 @@ class Scanner():
                     self.device.close()
                     modeOptions = [{'shortHelp': mode, 'longHelp': mode, 'confValue': mode} for mode in self.options['mode']]
                     self.modeMenu.AppendRadioSet(*modeOptions, confKey="Mode")
+                    self.frame.config.DefaultTo('/Scan/Mode', self.options['mode'][0])
+                    self.frame.config.DefaultTo('/Scan/Resolution', '75')
                     self.frame.EnableScanUI()
                 else:
                     wx.LogDebug('No scanner found')

@@ -16,6 +16,15 @@ class Config(wx.Config):
         super().Flush()
         return result
 
+    def DefaultTo(self, *args):
+        wx.LogDebug(f"Config.DefaultTo({args})")
+        if not super().Read(args[0]):
+            result = super().Write(*args)
+            super().Flush()
+            return result
+        else:
+            wx.LogDebug(f'Already set -- not clobbering')
+
     def ReadBool(self, *args):
         wx.LogDebug(f"Config.ReadBool({args})")
         return super().ReadBool(*args)
