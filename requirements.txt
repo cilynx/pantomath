@@ -1,0 +1,7 @@
+wxpython
+filetype
+pytesseract
+thefuzz
+python-dateutil
+pdf2image
+python-sane
