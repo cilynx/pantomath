@@ -13,7 +13,7 @@ class Date(BagOfWords):
 
     def __init__(self, words):
         super().__init__(words)
-        self.dt = parse(self.text)
+        self.dt = parse(self.text, fuzzy=True)
         self.range = None
         for word in self.words:
             word.date = self
